@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/auth-layout :: authPage('Sign in', ~{::section})}">
+<body>
+<section>
+  <h2 class="text-2xl font-semibold text-bank-950 mb-1">Welcome back</h2>
+  <p class="text-sm text-slate-500 mb-8">Sign in to manage your checking account.</p>
+
+  <div th:if="${notice}" class="mb-5 flex gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 text-sm text-emerald-800">
+    <svg class="h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span th:text="${notice}">Notice</span>
+  </div>
+  <div th:if="${error}" class="mb-5 flex gap-3 rounded-xl bg-rose-50 border border-rose-200/80 px-4 py-3 text-sm text-rose-800">
+    <svg class="h-5 w-5 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+    <span th:text="${error}">Invalid credentials</span>
+  </div>
+
+  <form th:action="@{/login}" method="post" class="space-y-5">
+    <div>
+      <label for="username" class="block text-sm font-medium text-slate-700 mb-1.5">Username</label>
+      <input id="username" name="username" type="text" required autofocus autocomplete="username"
+             class="input-bank" placeholder="e.g. alice" />
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
+      </div>
+      <input id="password" name="password" type="password" required autocomplete="current-password"
+             class="input-bank" placeholder="Enter your password" />
+    </div>
+    <button type="submit" class="btn-primary w-full py-3.5">Sign in securely</button>
+  </form>
+
+  <p class="mt-8 text-center text-sm text-slate-600">
+    Don't have an account?
+    <a th:href="@{/signup}" class="font-semibold text-bank-700 hover:text-bank-900">Open one free</a>
+  </p>
+
+  <div class="mt-10 rounded-2xl bg-slate-50 border border-slate-200/80 p-5">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Demo access</p>
+    <p class="text-sm text-slate-600 mb-2">Try any seeded user with password <code class="px-1.5 py-0.5 rounded bg-white border text-bank-800 font-mono text-xs">Password!1</code></p>
+    <div class="flex flex-wrap gap-2">
+      <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-mono text-slate-600">alice</span>
+      <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-mono text-slate-600">bob</span>
+      <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-mono text-slate-600">carol</span>
+      <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-mono text-slate-600">dave</span>
+      <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-mono text-slate-600">eve</span>
+    </div>
+  </div>
+</section>
+</body>
+</html>

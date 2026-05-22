@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="publicPage(title, content)">
+<head th:replace="~{fragments/head :: head(${title})}"></head>
+<body class="min-h-screen bg-[#f4f6f9] text-slate-800 antialiased">
+
+  <!-- Navigation -->
+  <header class="fixed top-0 inset-x-0 z-50 glass-nav border-b border-slate-200/60">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-8 h-16">
+      <a th:href="@{/}" class="flex items-center gap-3 group">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-bank-800 ring-1 ring-bank-700/50 group-hover:ring-gold-400/30 transition">
+          <svg class="h-5 w-5 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+        </span>
+        <div>
+          <div class="text-base font-semibold text-bank-950 leading-none">iTrust</div>
+          <div class="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5">Online Banking</div>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <a href="#features" class="hover:text-bank-800 transition">Features</a>
+        <a href="#security" class="hover:text-bank-800 transition">Security</a>
+        <a href="#how-it-works" class="hover:text-bank-800 transition">How it works</a>
+      </nav>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a th:href="@{/login}" class="hidden sm:inline-flex px-4 py-2.5 text-sm font-semibold text-bank-800 hover:text-bank-950 transition">Sign in</a>
+        <a th:href="@{/signup}" class="btn-primary px-4 sm:px-5 py-2.5">Open account</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <th:block th:replace="${content}"></th:block>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200/80 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-bank-800">
+              <svg class="h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+            </span>
+            <span class="font-semibold text-bank-950">iTrust</span>
+          </div>
+          <p class="text-sm text-slate-500 max-w-sm leading-relaxed">
+            A portfolio-grade banking demo with real balances, atomic transfers, and active-active disaster recovery across AWS regions.
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Banking</p>
+          <ul class="space-y-2 text-sm text-slate-600">
+            <li><a th:href="@{/signup}" class="hover:text-bank-800">Open account</a></li>
+            <li><a th:href="@{/login}" class="hover:text-bank-800">Sign in</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Platform</p>
+          <ul class="space-y-2 text-sm text-slate-600">
+            <li>ECS Fargate</li>
+            <li>DynamoDB Global Table</li>
+            <li th:if="${region != null}" th:text="'Region: ' + ${region}">Region</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-10 pt-8 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+        <p>&copy; 2026 iTrust. Portfolio demo — not a real financial institution.</p>
+        <p class="flex items-center gap-2">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          Systems operational
+        </p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

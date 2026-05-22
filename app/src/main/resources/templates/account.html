@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page('Statements', ~{::section})}">
+<body>
+<section>
+  <a th:href="@{/dashboard}" class="inline-flex items-center gap-1 text-sm font-medium text-bank-700 hover:text-bank-900 mb-6">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+    Back to overview
+  </a>
+
+  <!-- Account header -->
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6 sm:p-8 mb-6 flex flex-wrap items-center justify-between gap-6">
+    <div>
+      <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Checking account</p>
+      <h2 class="text-xl font-semibold text-bank-950" th:text="${account.displayName()}">Account</h2>
+      <p class="text-sm font-mono text-slate-500 mt-1" th:text="${account.maskedAccountNumber()}">****</p>
+    </div>
+    <div class="text-right">
+      <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Current balance</p>
+      <p class="font-display text-4xl text-bank-900 tabular-nums">
+        $<span th:text="${#numbers.formatDecimal(account.balance(), 1, 'COMMA', 2, 'POINT')}">0.00</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-card overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-100">
+      <h3 class="font-semibold text-bank-900">Transaction history</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th class="px-6 py-3 font-semibold">Date</th>
+            <th class="px-6 py-3 font-semibold">Type</th>
+            <th class="px-6 py-3 font-semibold">Description</th>
+            <th class="px-6 py-3 font-semibold">To / From</th>
+            <th class="px-6 py-3 font-semibold text-right">Amount</th>
+            <th class="px-6 py-3 font-semibold text-right">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:if="${page.items().isEmpty()}">
+            <td colspan="6" class="px-6 py-16 text-center text-slate-400">No transactions on this account.</td>
+          </tr>
+          <tr th:each="t : ${page.items()}" class="border-t border-slate-100 hover:bg-slate-50/50">
+            <td class="px-6 py-4 text-slate-500 whitespace-nowrap tabular-nums"
+                th:text="${#temporals.format(t.createdAt(), 'MMM d, yyyy')}">date</td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-0.5 rounded-md text-xs font-medium"
+                    th:classappend="${t.isCredit() ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}"
+                    th:text="${t.type()}">type</span>
+            </td>
+            <td class="px-6 py-4 text-slate-800" th:text="${t.description()}">desc</td>
+            <td class="px-6 py-4 font-mono text-xs text-slate-600" th:text="${t.counterpartyUsername() != null ? '@' + t.counterpartyUsername() : '—'}">cp</td>
+            <td class="px-6 py-4 text-right font-semibold tabular-nums whitespace-nowrap"
+                th:classappend="${t.isCredit() ? 'text-emerald-700' : 'text-rose-700'}"
+                th:text="${t.isCredit() ? '+' : '-'} + '$' + ${#numbers.formatDecimal(t.amount(), 1, 'COMMA', 2, 'POINT')}">+$0</td>
+            <td class="px-6 py-4 text-right text-slate-600 tabular-nums whitespace-nowrap"
+                th:text="${t.balanceAfter() != null ? '$' + #numbers.formatDecimal(t.balanceAfter(), 1, 'COMMA', 2, 'POINT') : '—'}">$0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6 text-center" th:if="${page.nextCursor() != null}">
+    <a th:href="@{|/accounts/${account.accountId()}?cursor=${page.nextCursor()}|}"
+       class="btn-secondary">Load more transactions</a>
+  </div>
+</section>
+</body>
+</html>

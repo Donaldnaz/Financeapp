@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page('Send money', ~{::section})}">
+<body>
+<section class="max-w-2xl mx-auto">
+  <a th:href="@{/dashboard}" class="inline-flex items-center gap-1 text-sm font-medium text-bank-700 hover:text-bank-900 mb-6">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+    Back to overview
+  </a>
+
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-card overflow-hidden">
+    <div class="bank-pattern px-8 py-6 text-white">
+      <h2 class="text-xl font-semibold">Send money</h2>
+      <p class="text-sm text-white/70 mt-1">Instant transfer to another iTrust member</p>
+    </div>
+
+    <div class="p-8">
+      <div class="flex items-center justify-between rounded-2xl bg-bank-50 border border-bank-100 px-5 py-4 mb-6">
+        <span class="text-sm text-bank-800">Available to send</span>
+        <span class="text-xl font-semibold text-bank-900 tabular-nums">
+          $<span th:text="${#numbers.formatDecimal(account.balance(), 1, 'COMMA', 2, 'POINT')}">0.00</span>
+        </span>
+      </div>
+
+      <div th:if="${error}" class="mb-5 flex gap-3 rounded-xl bg-rose-50 border border-rose-200/80 px-4 py-3 text-sm text-rose-800">
+        <span th:text="${error}">error</span>
+      </div>
+
+      <form th:action="@{/transfer}" method="post" class="space-y-5">
+        <div>
+          <label for="toUsername" class="block text-sm font-medium text-slate-700 mb-1.5">Send to</label>
+          <input id="toUsername" name="toUsername" list="recipients" required maxlength="30"
+                 autocomplete="off" autocapitalize="none" spellcheck="false"
+                 class="input-bank lowercase" placeholder="@username" />
+          <datalist id="recipients">
+            <option th:each="r : ${recipients}" th:value="${r}"></option>
+          </datalist>
+        </div>
+        <div>
+          <label for="amount" class="block text-sm font-medium text-slate-700 mb-1.5">Amount</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
+            <input id="amount" name="amount" type="number" min="0.01" step="0.01" required
+                   class="input-bank pl-8 text-2xl font-semibold tabular-nums" placeholder="0.00" />
+          </div>
+        </div>
+        <div>
+          <label for="memo" class="block text-sm font-medium text-slate-700 mb-1.5">Memo <span class="text-slate-400 font-normal">(optional)</span></label>
+          <input id="memo" name="memo" type="text" maxlength="256" placeholder="What's this for?"
+                 class="input-bank" />
+        </div>
+        <button type="submit" class="btn-primary w-full py-3.5">Review &amp; send</button>
+        <p class="text-center text-xs text-slate-400">Transfers are atomic and replicated across regions instantly.</p>
+      </form>
+    </div>
+  </div>
+</section>
+</body>
+</html>

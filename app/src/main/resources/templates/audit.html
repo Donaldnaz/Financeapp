@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page('Security log', ~{::section})}">
+<body>
+<section>
+  <a th:href="@{/dashboard}" class="inline-flex items-center gap-1 text-sm font-medium text-bank-700 hover:text-bank-900 mb-6">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+    Back to overview
+  </a>
+
+  <div class="mb-6">
+    <h2 class="text-2xl font-semibold text-bank-950">Security &amp; activity log</h2>
+    <p class="text-sm text-slate-500 mt-1">Sign-ins, transfers, and account events — retained 90 days.</p>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-100">
+            <th class="px-6 py-4 font-semibold">Timestamp</th>
+            <th class="px-6 py-4 font-semibold">Event</th>
+            <th class="px-6 py-4 font-semibold">Region</th>
+            <th class="px-6 py-4 font-semibold">IP address</th>
+            <th class="px-6 py-4 font-semibold">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:if="${page.items().isEmpty()}">
+            <td colspan="5" class="px-6 py-16 text-center text-slate-400">No security events recorded yet.</td>
+          </tr>
+          <tr th:each="e : ${page.items()}" class="border-t border-slate-100 hover:bg-slate-50/50">
+            <td class="px-6 py-4 text-slate-500 whitespace-nowrap tabular-nums"
+                th:text="${#temporals.format(e.createdAt(), 'MMM d, yyyy HH:mm')}">when</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold"
+                    th:classappend="${e.eventType() == 'SIGNUP' ? 'bg-violet-100 text-violet-800'
+                      : (e.eventType() == 'LOGIN_SUCCESS' ? 'bg-emerald-100 text-emerald-800'
+                      : (e.eventType() == 'LOGIN_FAILURE' ? 'bg-rose-100 text-rose-800'
+                      : (e.eventType() == 'TRANSFER_OUT' || e.eventType() == 'WITHDRAWAL' || e.eventType() == 'WITHDRAWAL_PAYPAL' ? 'bg-amber-100 text-amber-800'
+                      : (e.eventType() == 'DEPOSIT_CARD' ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-bank-100 text-bank-800')))}"
+                    th:text="${e.eventType()}">EVENT</span>
+            </td>
+            <td class="px-6 py-4 font-mono text-xs text-slate-600" th:text="${e.region() ?: '—'}">region</td>
+            <td class="px-6 py-4 font-mono text-xs text-slate-600" th:text="${e.ip() ?: '—'}">ip</td>
+            <td class="px-6 py-4 text-xs text-slate-600 max-w-xs truncate" th:text="${e.details() ?: '—'}">details</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</body>
+</html>

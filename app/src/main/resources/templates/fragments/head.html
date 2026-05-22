@@ -1,0 +1,201 @@
+<head xmlns:th="http://www.thymeleaf.org" th:fragment="head(title)">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="iTrust — secure online checking with instant transfers and always-on multi-region protection." />
+  <title th:text="${title != null ? title + ' · iTrust' : 'iTrust — Online Banking'}">iTrust</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Instrument Serif"', 'Georgia', 'serif'],
+          },
+          colors: {
+            bank: {
+              50: '#eef6f8',
+              100: '#d5e9ee',
+              200: '#a8d0db',
+              300: '#6fb0c4',
+              400: '#3d8fa8',
+              500: '#1f7189',
+              600: '#155a70',
+              700: '#0f4658',
+              800: '#0c3847',
+              900: '#082f3c',
+              950: '#041820',
+            },
+            gold: {
+              300: '#e8c547',
+              400: '#d4af37',
+              500: '#c9a227',
+            }
+          },
+          boxShadow: {
+            card: '0 1px 2px rgba(8,47,60,.04), 0 8px 24px rgba(8,47,60,.06)',
+            elevated: '0 4px 6px rgba(8,47,60,.05), 0 20px 40px rgba(8,47,60,.08)',
+            cardHover: '0 12px 40px rgba(8,47,60,.12)',
+            glow: '0 0 0 1px rgba(212,175,55,.15), 0 20px 60px rgba(8,47,60,.15)',
+          },
+          animation: {
+            'fade-up': 'fadeUp .6s ease-out both',
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp: {
+              '0%': { opacity: '0', transform: 'translateY(16px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-8px)' },
+            },
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: "DM Sans", system-ui, sans-serif; }
+    .bank-pattern {
+      background-color: #0c3847;
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(31,113,137,.35) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(212,175,55,.12) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(255,255,255,.03) 25%, transparent 25%),
+        linear-gradient(225deg, rgba(255,255,255,.03) 25%, transparent 25%);
+      background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+    }
+    .hero-mesh {
+      background-color: #041820;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(31,113,137,.45) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 90% 20%, rgba(212,175,55,.08) 0%, transparent 50%),
+        radial-gradient(ellipse 40% 30% at 10% 60%, rgba(31,113,137,.2) 0%, transparent 50%);
+    }
+    .glass-nav { backdrop-filter: blur(16px); background: rgba(255,255,255,.88); }
+    .glass-dark { backdrop-filter: blur(16px); background: rgba(4,24,32,.75); }
+    .debit-card {
+      background: linear-gradient(135deg, #0f4658 0%, #041820 50%, #155a70 100%);
+      box-shadow: 0 25px 50px -12px rgba(4,24,32,.5), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .input-bank {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #1e293b;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input-bank::placeholder { color: #94a3b8; }
+    .input-bank:focus {
+      outline: none;
+      border-color: #1f7189;
+      box-shadow: 0 0 0 3px rgba(31,113,137,.25);
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      background: #0f4658;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,.06);
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary:hover { background: #0c3847; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      color: #0c3847;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: background .15s;
+    }
+    .btn-secondary:hover { background: #f8fafc; }
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      background: #d4af37;
+      color: #041820;
+      font-weight: 600;
+      font-size: 0.875rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,.06);
+      transition: background .15s, transform .1s;
+    }
+    .btn-gold:hover { background: #c9a227; }
+    .btn-gold:active { transform: scale(0.98); }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      color: rgba(255,255,255,.9);
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: background .15s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); }
+    .card-bank {
+      background: #fff;
+      border-radius: 1rem;
+      border: 1px solid rgba(226,232,240,.8);
+      box-shadow: 0 1px 2px rgba(8,47,60,.04), 0 8px 24px rgba(8,47,60,.06);
+      transition: box-shadow .3s;
+    }
+    .card-bank:hover {
+      box-shadow: 0 12px 40px rgba(8,47,60,.12);
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #155a70;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      color: #475569;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background .15s, color .15s;
+    }
+    .nav-link:hover { background: #f8fafc; color: #0c3847; }
+    .nav-active {
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    }
+    .shadow-card { box-shadow: 0 1px 2px rgba(8,47,60,.04), 0 8px 24px rgba(8,47,60,.06); }
+    .shadow-elevated { box-shadow: 0 4px 6px rgba(8,47,60,.05), 0 20px 40px rgba(8,47,60,.08); }
+    .shadow-glow { box-shadow: 0 0 0 1px rgba(212,175,55,.15), 0 20px 60px rgba(8,47,60,.15); }
+  </style>
+</head>

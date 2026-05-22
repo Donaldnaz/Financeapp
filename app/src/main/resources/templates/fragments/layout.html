@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<head th:replace="~{fragments/head :: head(${title})}"></head>
+<body class="min-h-screen bg-[#f4f6f9] text-slate-800 antialiased" th:if="${user != null}">
+
+  <!-- Desktop sidebar -->
+  <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col bg-bank-950 text-white">
+    <div class="flex h-16 items-center gap-3 px-6 border-b border-white/10">
+      <a th:href="@{/dashboard}" class="flex items-center gap-3 group">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-bank-700 ring-1 ring-white/10 group-hover:ring-gold-400/30 transition">
+          <svg class="h-5 w-5 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+        </span>
+        <div>
+          <div class="text-sm font-semibold">iTrust</div>
+          <div class="text-[10px] uppercase tracking-widest text-white/50">Online Banking</div>
+        </div>
+      </a>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-1">
+      <a th:href="@{/dashboard}" class="nav-link text-white/80 hover:bg-white/5 hover:text-white">
+        <svg class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+        Overview
+      </a>
+      <a th:href="@{/transfer}" class="nav-link text-white/80 hover:bg-white/5 hover:text-white">
+        <svg class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+        Send money
+      </a>
+      <a th:href="@{/deposit}" class="nav-link text-white/80 hover:bg-white/5 hover:text-white">
+        <svg class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Deposit
+      </a>
+      <a th:href="@{/withdraw}" class="nav-link text-white/80 hover:bg-white/5 hover:text-white">
+        <svg class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9.75h.008v.008H12V9.75z"/></svg>
+        Withdraw
+      </a>
+      <a th:href="@{/audit}" class="nav-link text-white/80 hover:bg-white/5 hover:text-white">
+        <svg class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
+        Security log
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/10">
+      <div class="rounded-xl bg-white/5 p-4 mb-3">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-full bg-gradient-to-br from-bank-400 to-bank-700 flex items-center justify-center text-sm font-bold text-white"
+               th:text="${#strings.substring(user.displayName(),0,1)}">A</div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium truncate" th:text="${user.displayName()}">User</p>
+            <p class="text-xs text-white/50 truncate" th:text="'@' + ${user.username()}">@user</p>
+          </div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <button type="submit" class="w-full text-left nav-link text-white/70 hover:bg-white/5 hover:text-white text-sm">
+          <svg class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+          Sign out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main column -->
+  <div class="lg:pl-64 flex flex-col min-h-screen pb-20 lg:pb-0">
+    <!-- Top bar -->
+    <header class="sticky top-0 z-20 glass-nav border-b border-slate-200/80">
+      <div class="flex items-center justify-between gap-4 px-4 sm:px-8 h-16">
+        <div class="lg:hidden flex items-center gap-2">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-bank-800 text-gold-400 text-xs font-bold">i</span>
+          <span class="font-semibold text-bank-900 text-sm">iTrust</span>
+        </div>
+        <h1 class="hidden lg:block text-lg font-semibold text-bank-900" th:text="${title} ?: 'Overview'">Overview</h1>
+        <div class="flex items-center gap-3 ml-auto">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium ring-1 ring-emerald-200/60">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span th:text="${region}">us-east-1</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 px-4 sm:px-8 py-8 max-w-6xl w-full">
+      <th:block th:replace="${content}"></th:block>
+    </main>
+
+    <footer class="hidden lg:block px-8 py-6 text-xs text-slate-400 border-t border-slate-200/60">
+      iTrust &middot; Active-active multi-region demo &middot; ECS Fargate &middot; DynamoDB Global Table
+      &middot; <span class="text-slate-500">Not a real financial institution</span>
+    </footer>
+  </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 glass-nav border-t border-slate-200/80 safe-area-pb">
+    <div class="grid grid-cols-4 gap-1 px-2 py-2">
+      <a th:href="@{/dashboard}" class="flex flex-col items-center gap-1 py-2 rounded-xl text-bank-700">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+        <span class="text-[10px] font-medium">Home</span>
+      </a>
+      <a th:href="@{/transfer}" class="flex flex-col items-center gap-1 py-2 rounded-xl text-slate-500">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+        <span class="text-[10px] font-medium">Send</span>
+      </a>
+      <a th:href="@{/deposit}" class="flex flex-col items-center gap-1 py-2 rounded-xl text-slate-500">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        <span class="text-[10px] font-medium">Deposit</span>
+      </a>
+      <a th:href="@{/audit}" class="flex flex-col items-center gap-1 py-2 rounded-xl text-slate-500">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        <span class="text-[10px] font-medium">Security</span>
+      </a>
+    </div>
+  </nav>
+</body>
+</html>

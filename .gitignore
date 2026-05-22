@@ -1,0 +1,22 @@
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Java
+app/target/
+app/.mvn/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local env files
+.env
+.env.*

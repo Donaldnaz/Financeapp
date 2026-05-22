@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/public-layout :: publicPage('Personal Banking', ~{::section})}">
+<body>
+<section>
+  <!-- Hero -->
+  <div class="hero-mesh text-white pt-28 pb-20 sm:pt-36 sm:pb-28 overflow-hidden relative">
+    <div class="absolute inset-0 opacity-30" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.03&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 relative">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div class="animate-fade-up">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-xs font-medium text-gold-300 mb-6">
+            <span class="h-1.5 w-1.5 rounded-full bg-gold-400"></span>
+            $1,000 welcome bonus on new accounts
+          </div>
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-tight mb-6">
+            Banking you can trust.<br/>
+            <span class="text-gold-400">Always on.</span> Everywhere.
+          </h1>
+          <p class="text-lg text-white/70 leading-relaxed max-w-lg mb-8">
+            Free checking with instant peer-to-peer transfers, real-time balances, and enterprise-grade security — replicated active-active across AWS regions.
+          </p>
+          <div class="flex flex-wrap items-center gap-3">
+            <a th:href="@{/signup}" class="btn-gold px-7 py-3.5 text-base">Open free account</a>
+            <a th:href="@{/login}" class="btn-ghost px-7 py-3.5 text-base ring-1 ring-white/20 rounded-xl">Sign in</a>
+          </div>
+          <div class="mt-10 flex flex-wrap gap-6 text-xs text-white/50">
+            <span class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              No monthly fees
+            </span>
+            <span class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Instant transfers
+            </span>
+            <span class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              256-bit encryption
+            </span>
+          </div>
+        </div>
+
+        <!-- App preview -->
+        <div class="relative lg:pl-8 animate-fade-up" style="animation-delay: .15s">
+          <div class="absolute -inset-4 bg-gold-400/10 rounded-full blur-3xl"></div>
+          <div class="relative animate-float">
+            <!-- Debit card -->
+            <div class="debit-card rounded-2xl p-6 sm:p-8 text-white max-w-sm mx-auto lg:mx-0 lg:ml-auto mb-6 rotate-[-2deg]">
+              <div class="flex justify-between items-start mb-10">
+                <div>
+                  <p class="text-[10px] uppercase tracking-[0.25em] text-white/50">iTrust Checking</p>
+                  <p class="text-sm font-medium mt-1">Virtual Debit</p>
+                </div>
+                <div class="h-8 w-12 rounded bg-gradient-to-br from-gold-300 to-gold-500 opacity-80"></div>
+              </div>
+              <p class="font-mono text-lg tracking-[0.2em] mb-6">•••• •••• •••• 4821</p>
+              <div class="flex justify-between items-end">
+                <div>
+                  <p class="text-[10px] uppercase text-white/40">Cardholder</p>
+                  <p class="text-sm font-medium">JANE SMITH</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-[10px] uppercase text-white/40">Valid thru</p>
+                  <p class="text-sm font-mono">09/28</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Balance widget -->
+            <div class="bg-white rounded-2xl shadow-glow p-6 max-w-xs mx-auto lg:mx-0 lg:mr-auto -mt-2 rotate-[1deg]">
+              <p class="text-xs text-slate-500 mb-1">Available balance</p>
+              <p class="font-display text-3xl text-bank-900 tabular-nums">$1,247.50</p>
+              <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="flex items-center gap-2 text-slate-600">
+                    <span class="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 text-xs">↓</span>
+                    Deposit
+                  </span>
+                  <span class="font-semibold text-emerald-700 tabular-nums">+$500.00</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="flex items-center gap-2 text-slate-600">
+                    <span class="h-7 w-7 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 text-xs">↑</span>
+                    @bob
+                  </span>
+                  <span class="font-semibold text-rose-700 tabular-nums">−$75.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div id="features" class="py-20 sm:py-24 bg-[#f4f6f9]">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <p class="section-label mb-3">Everything you need</p>
+        <h2 class="text-3xl sm:text-4xl font-semibold text-bank-950 tracking-tight">Modern checking, built for reliability</h2>
+        <p class="mt-4 text-slate-600 leading-relaxed">Real ledger semantics — not mock data. Every transfer is atomic, auditable, and replicated globally.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <article class="card-bank p-8">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-bank-50 text-bank-700 mb-5">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+          </span>
+          <h3 class="text-lg font-semibold text-bank-950 mb-2">Instant transfers</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Send money to any iTrust member in seconds. Balances update in real time with full transaction history.</p>
+        </article>
+        <article class="card-bank p-8">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 mb-5">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.375M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </span>
+          <h3 class="text-lg font-semibold text-bank-950 mb-2">Real balances</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Conditional writes prevent overdrafts. Every debit and credit is tracked with running balance snapshots.</p>
+        </article>
+        <article class="card-bank p-8">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 mb-5">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A8.966 8.966 0 013 12c0-1.264.26-2.467.732-3.553"/></svg>
+          </span>
+          <h3 class="text-lg font-semibold text-bank-950 mb-2">Multi-region DR</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Active-active across US regions. Failover without data loss via DynamoDB Global Tables and Route53 health checks.</p>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div id="how-it-works" class="py-20 sm:py-24 bg-white border-y border-slate-200/60">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <p class="section-label mb-3">Get started in minutes</p>
+          <h2 class="text-3xl sm:text-4xl font-semibold text-bank-950 tracking-tight mb-6">Open an account. Start banking.</h2>
+          <ol class="space-y-6">
+            <li class="flex gap-4">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bank-800 text-white text-sm font-bold">1</span>
+              <div>
+                <p class="font-semibold text-bank-950">Create your profile</p>
+                <p class="text-sm text-slate-600 mt-1">Choose a username and set a strong password. Enterprise policy enforced.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bank-800 text-white text-sm font-bold">2</span>
+              <div>
+                <p class="font-semibold text-bank-950">Receive your welcome bonus</p>
+                <p class="text-sm text-slate-600 mt-1">$1,000 is credited instantly to your new checking account.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bank-800 text-white text-sm font-bold">3</span>
+              <div>
+                <p class="font-semibold text-bank-950">Send, deposit, and track</p>
+                <p class="text-sm text-slate-600 mt-1">Transfer to friends, add funds, and review your full security audit log.</p>
+              </div>
+            </li>
+          </ol>
+          <a th:href="@{/signup}" class="btn-primary mt-10 px-7 py-3.5">Open your account</a>
+        </div>
+
+        <div class="bank-pattern rounded-3xl p-8 sm:p-10 text-white shadow-elevated">
+          <p class="text-xs uppercase tracking-[0.2em] text-white/50 mb-4">Try the demo</p>
+          <p class="font-display text-2xl mb-6">Already have demo credentials?</p>
+          <div class="rounded-2xl bg-white/10 ring-1 ring-white/15 p-5 mb-6">
+            <p class="text-sm text-white/70 mb-3">Sign in with any seeded user:</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1.5 rounded-lg bg-white/10 font-mono text-sm">alice</span>
+              <span class="px-3 py-1.5 rounded-lg bg-white/10 font-mono text-sm">bob</span>
+              <span class="px-3 py-1.5 rounded-lg bg-white/10 font-mono text-sm">carol</span>
+            </div>
+            <p class="text-xs text-white/50 mt-4">Password: <code class="text-gold-300 font-mono">Password!1</code></p>
+          </div>
+          <a th:href="@{/login}" class="inline-flex items-center gap-2 text-sm font-semibold text-gold-400 hover:text-gold-300 transition">
+            Go to sign in
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security -->
+  <div id="security" class="py-20 sm:py-24 bg-[#f4f6f9]">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8">
+      <div class="bank-pattern rounded-3xl overflow-hidden shadow-elevated">
+        <div class="grid lg:grid-cols-2">
+          <div class="p-8 sm:p-12 text-white">
+            <p class="section-label text-gold-400/80 mb-3">Security first</p>
+            <h2 class="text-3xl font-semibold tracking-tight mb-4">Your money deserves bank-grade protection</h2>
+            <p class="text-white/70 text-sm leading-relaxed mb-8">Every sign-in, transfer, and deposit is logged with IP, region, and timestamp. Passwords are hashed with BCrypt and validated against a 1,000-entry blocklist.</p>
+            <ul class="space-y-4 text-sm">
+              <li class="flex items-center gap-3">
+                <span class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-emerald-300">✓</span>
+                JWT session cookies with HttpOnly flag
+              </li>
+              <li class="flex items-center gap-3">
+                <span class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-emerald-300">✓</span>
+                90-day audit log retention with TTL
+              </li>
+              <li class="flex items-center gap-3">
+                <span class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-emerald-300">✓</span>
+                Atomic TransactWriteItems — no partial transfers
+              </li>
+            </ul>
+          </div>
+          <div class="bg-white/5 backdrop-blur-sm p-8 sm:p-12 flex items-center">
+            <div class="w-full space-y-3">
+              <div class="rounded-xl bg-white/10 ring-1 ring-white/10 px-4 py-3 flex items-center justify-between text-sm">
+                <span class="text-emerald-300 font-medium">LOGIN_SUCCESS</span>
+                <span class="text-white/40 font-mono text-xs">2m ago</span>
+              </div>
+              <div class="rounded-xl bg-white/10 ring-1 ring-white/10 px-4 py-3 flex items-center justify-between text-sm">
+                <span class="text-amber-300 font-medium">TRANSFER_OUT</span>
+                <span class="text-white/40 font-mono text-xs">15m ago</span>
+              </div>
+              <div class="rounded-xl bg-white/10 ring-1 ring-white/10 px-4 py-3 flex items-center justify-between text-sm">
+                <span class="text-white/80 font-medium">DEPOSIT</span>
+                <span class="text-white/40 font-mono text-xs">1h ago</span>
+              </div>
+              <div class="rounded-xl bg-white/10 ring-1 ring-white/10 px-4 py-3 flex items-center justify-between text-sm">
+                <span class="text-violet-300 font-medium">SIGNUP</span>
+                <span class="text-white/40 font-mono text-xs">Today</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="py-20 bg-bank-950 text-white">
+    <div class="max-w-3xl mx-auto px-4 sm:px-8 text-center">
+      <h2 class="font-display text-3xl sm:text-4xl tracking-tight mb-4">Ready to experience iTrust?</h2>
+      <p class="text-white/60 mb-8">Open a free checking account in under a minute. No paperwork. No fees. Just banking.</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a th:href="@{/signup}" class="btn-gold px-8 py-3.5 text-base">Get started free</a>
+        <a th:href="@{/login}" class="btn-ghost px-8 py-3.5 text-base ring-1 ring-white/20 rounded-xl">Sign in</a>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

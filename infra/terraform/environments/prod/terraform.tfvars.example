@@ -1,0 +1,4 @@
+domain_name     = "api.ikenna-financeapp-dr.com"
+hosted_zone_id  = "Z02272842N6T33RBSSBSE"
+container_image = "920375856513.dkr.ecr.us-east-1.amazonaws.com/financeapp-dr-prod-repo:stable"
+secret_value    = "{\"apiKey\":\"financeapp-prod-bootstrap\"}"
