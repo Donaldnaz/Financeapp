@@ -35,6 +35,15 @@ jobs:
         with:
           terraform_version: 1.8.5
 
+      - name: Empty ECR repository (allows delete)
+        run: |
+          REPO=financeapp-dr-dev-repo
+          aws ecr describe-repositories --repository-names "$REPO" --region "$AWS_REGION" >/dev/null 2>&1 || exit 0
+          IMAGE_IDS=$(aws ecr list-images --repository-name "$REPO" --region "$AWS_REGION" --query 'imageIds' --output json)
+          if [ "$IMAGE_IDS" != "[]" ] && [ "$IMAGE_IDS" != "null" ]; then
+            aws ecr batch-delete-image --repository-name "$REPO" --region "$AWS_REGION" --image-ids "$IMAGE_IDS"
+          fi
+
       - name: Terraform destroy dev
         working-directory: infra/terraform/environments/dev
         run: |
