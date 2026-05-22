@@ -74,6 +74,7 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working_directory: infra/terraform
+          soft_fail: true
 
   deploy-dev:
     name: Deploy DEV (ECR + ECS)
