@@ -23,13 +23,13 @@ module "iam" {
 module "load_balancer" {
   source = "../load_balancer"
 
-  name               = var.name
-  vpc_id             = var.vpc_id
-  public_subnet_ids  = var.public_subnet_ids
-  alb_sg_id          = var.alb_sg_id
-  container_port     = var.container_port
-  health_check_path  = var.health_check_path
-  tags               = var.tags
+  name              = var.name
+  vpc_id            = var.vpc_id
+  public_subnet_ids = var.public_subnet_ids
+  alb_sg_id         = var.alb_sg_id
+  container_port    = var.container_port
+  health_check_path = var.health_check_path
+  tags              = var.tags
 }
 
 # Preserve existing state addresses when IAM/ALB were inlined in this module.
