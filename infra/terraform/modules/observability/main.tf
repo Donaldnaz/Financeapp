@@ -17,6 +17,26 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   tags               = var.tags
 }
 
+resource "aws_cloudwatch_metric_alarm" "target_unhealthy" {
+  alarm_name          = "${var.name}-target-unhealthy"
+  alarm_description   = "Unhealthy targets in the ALB target group."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "UnHealthyHostCount"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 0
+
+  dimensions = {
+    TargetGroup  = var.target_group_arn_suffix
+    LoadBalancer = var.alb_arn_suffix
+  }
+
+  treat_missing_data = "notBreaching"
+  tags               = var.tags
+}
+
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${var.name}-ecs-cpu-high"
   alarm_description   = "ECS service CPU is above threshold."
