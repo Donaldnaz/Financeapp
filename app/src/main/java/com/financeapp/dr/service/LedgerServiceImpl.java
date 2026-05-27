@@ -71,7 +71,7 @@ public class LedgerServiceImpl implements LedgerService {
         TransactionResponse txn = store.deposit(requestId, accountId, userId, username, amount, description,
                 method, reference, region);
         if (PaymentMethodType.DEMO_CARD.equals(method)) {
-            store.logAuditEvent(userId, username, AuditEventType.DEPOSIT_CARD, ip, userAgent, region,
+            store.logAuditEvent(userId, AuditEventType.DEPOSIT_CARD, ip, region,
                     "amount=" + amount.toPlainString() + " card=" + reference
                             + " balanceAfter=" + nz(txn.balanceAfter()));
         }
@@ -89,7 +89,7 @@ public class LedgerServiceImpl implements LedgerService {
         PaymentMethodResponse paypal = store.saveDemoPayPal(userId, paypalEmail);
         TransactionResponse txn = store.withdraw(requestId, accountId, userId, username, amount, description,
                 PaymentMethodType.DEMO_PAYPAL, paypal.maskedReference(), region);
-        store.logAuditEvent(userId, username, AuditEventType.WITHDRAWAL_PAYPAL, ip, userAgent, region,
+        store.logAuditEvent(userId, AuditEventType.WITHDRAWAL_PAYPAL, ip, region,
                 "amount=" + amount.toPlainString() + " paypal=" + paypal.maskedReference()
                         + " balanceAfter=" + nz(txn.balanceAfter()));
         return txn;
@@ -100,13 +100,12 @@ public class LedgerServiceImpl implements LedgerService {
                                    String toUsername, BigDecimal amount, String memo, String ip, String userAgent) {
         TransferResult result = store.transfer(requestId, fromAccountId, fromUserId, fromUsername,
                 toUsername, amount, memo, region);
-        store.logAuditEvent(fromUserId, fromUsername, AuditEventType.TRANSFER_OUT, ip, userAgent, region,
+        store.logAuditEvent(fromUserId, AuditEventType.TRANSFER_OUT, ip, region,
                 "to=" + toUsername + " amount=" + amount.toPlainString()
                         + " balanceAfter=" + nz(result.senderTransaction().balanceAfter()));
         if (result.receiverTransaction() != null) {
             store.findUserByUsername(toUsername).ifPresent(receiver ->
-                    store.logAuditEvent(receiver.user().userId(), receiver.user().username(),
-                            AuditEventType.TRANSFER_IN, ip, userAgent, region,
+                    store.logAuditEvent(receiver.user().userId(), AuditEventType.TRANSFER_IN, ip, region,
                             "from=" + fromUsername + " amount=" + amount.toPlainString()
                                     + " balanceAfter=" + nz(result.receiverTransaction().balanceAfter())));
         }
@@ -141,7 +140,7 @@ public class LedgerServiceImpl implements LedgerService {
         store.deposit(UUID.randomUUID().toString(), account.accountId(),
                 user.userId(), user.username(), SIGNUP_BONUS, "Sign-up welcome bonus",
                 PaymentMethodType.WELCOME_BONUS, "Welcome bonus", region);
-        store.logAuditEvent(user.userId(), user.username(), AuditEventType.SIGNUP, ip, userAgent, region,
+        store.logAuditEvent(user.userId(), AuditEventType.SIGNUP, ip, region,
                 "accountId=" + account.accountId() + " welcomeBonus=" + SIGNUP_BONUS.toPlainString());
         return user;
     }
@@ -160,7 +159,7 @@ public class LedgerServiceImpl implements LedgerService {
         store.deposit(UUID.randomUUID().toString(), account.accountId(),
                 user.userId(), user.username(), SIGNUP_BONUS, "Sign-up welcome bonus",
                 PaymentMethodType.WELCOME_BONUS, "Welcome bonus", region);
-        store.logAuditEvent(user.userId(), user.username(), AuditEventType.SIGNUP, ip, userAgent, region,
+        store.logAuditEvent(user.userId(), AuditEventType.SIGNUP, ip, region,
                 "accountId=" + account.accountId() + " welcomeBonus=" + SIGNUP_BONUS.toPlainString()
                         + " provider=google");
         return user;
@@ -199,7 +198,7 @@ public class LedgerServiceImpl implements LedgerService {
 
     @Override
     public void recordLoginSuccess(String userId, String username, String ip, String userAgent) {
-        store.logAuditEvent(userId, username, AuditEventType.LOGIN_SUCCESS, ip, userAgent, region, null);
+        store.logAuditEvent(userId, AuditEventType.LOGIN_SUCCESS, ip, region, null);
     }
 
     @Override
@@ -207,12 +206,12 @@ public class LedgerServiceImpl implements LedgerService {
         String userId = store.findUserByUsername(username)
                 .map(u -> u.user().userId())
                 .orElse(null);
-        store.logAuditEvent(userId, username, AuditEventType.LOGIN_FAILURE, ip, userAgent, region, reason);
+        store.logAuditEvent(userId, AuditEventType.LOGIN_FAILURE, ip, region, reason);
     }
 
     @Override
     public void recordAssistantQuery(String userId, String username, String ip, String userAgent, String summary) {
-        store.logAuditEvent(userId, username, AuditEventType.ASSISTANT_QUERY, ip, userAgent, region, summary);
+        store.logAuditEvent(userId, AuditEventType.ASSISTANT_QUERY, ip, region, summary);
     }
 
     @Override

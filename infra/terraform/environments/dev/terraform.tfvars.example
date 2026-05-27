@@ -21,3 +21,11 @@ container_image = "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/financeapp-dr-dev-
 # Sensitive — use TF_VAR_secret_value / TF_VAR_jwt_secret in CI instead of committing real values.
 secret_value = "{\"apiKey\":\"replace-me\"}"
 jwt_secret   = "replace-with-at-least-32-characters"
+
+# Optional Google OAuth (Continue with Google). Pass via TF_VAR_* or set here.
+# google_client_id     = "your-client-id.apps.googleusercontent.com"
+# google_client_secret = "your-client-secret"
+# Register redirect URI in Google Cloud Console, e.g.:
+#   http://api-dev.example.com/login/oauth2/code/google
+# Until DNS works, use the primary ALB URL instead:
+# google_redirect_uri = "http://financeapp-dr-dev-primary-alb-....us-east-1.elb.amazonaws.com/login/oauth2/code/google"

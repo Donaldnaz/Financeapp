@@ -66,7 +66,11 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor 
     }
 
     static boolean isAppProperty(String key) {
-        return key.startsWith("ASSISTANT_") || key.startsWith("OPENAI_") || key.startsWith("APP_");
+        return key.startsWith("ASSISTANT_")
+                || key.startsWith("OPENAI_")
+                || key.startsWith("APP_")
+                || key.startsWith("GOOGLE_")
+                || "SPRING_PROFILES_ACTIVE".equals(key);
     }
 
     private static void parseLine(String line, Map<String, Object> values) {

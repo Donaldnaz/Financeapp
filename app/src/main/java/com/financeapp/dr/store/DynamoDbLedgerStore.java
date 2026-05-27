@@ -43,23 +43,29 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import static com.financeapp.dr.store.LedgerItemKeys.SK_CARD_DEMO;
+import static com.financeapp.dr.store.LedgerItemKeys.SK_METADATA;
+import static com.financeapp.dr.store.LedgerItemKeys.SK_PAYPAL_DEMO;
+import static com.financeapp.dr.store.LedgerItemKeys.accountPk;
+import static com.financeapp.dr.store.LedgerItemKeys.auditUserPk;
+import static com.financeapp.dr.store.LedgerItemKeys.idempotencyPk;
+import static com.financeapp.dr.store.LedgerItemKeys.parseAccountId;
+import static com.financeapp.dr.store.LedgerItemKeys.parseEventId;
+import static com.financeapp.dr.store.LedgerItemKeys.parseTransactionId;
+import static com.financeapp.dr.store.LedgerItemKeys.parseUsername;
+import static com.financeapp.dr.store.LedgerItemKeys.paymentUserPk;
+import static com.financeapp.dr.store.LedgerItemKeys.resolveAuditUserId;
+import static com.financeapp.dr.store.LedgerItemKeys.transactionGsiPk;
+import static com.financeapp.dr.store.LedgerItemKeys.txnSk;
+import static com.financeapp.dr.store.LedgerItemKeys.userPk;
+
 @Component
 @ConditionalOnProperty(name = "app.storage.type", havingValue = "dynamodb")
 public class DynamoDbLedgerStore implements LedgerStore {
 
     private static final Logger log = LoggerFactory.getLogger(DynamoDbLedgerStore.class);
 
-    private static final String ENTITY_ACCOUNT = "ACCOUNT";
-    private static final String ENTITY_TRANSACTION = "TRANSACTION";
-    private static final String ENTITY_IDEMPOTENCY = "IDEMPOTENCY";
-    private static final String ENTITY_USER = "USER";
-    private static final String ENTITY_AUDIT = "AUDIT";
-    private static final String SK_METADATA = "METADATA";
     private static final long IDEMPOTENCY_TTL_SECONDS = 86_400L;
-    private static final String ENTITY_PAYMENT = "PAYMENT";
-    private static final String SK_CARD_DEMO = "CARD#DEMO";
-    private static final String SK_PAYPAL_DEMO = "PAYPAL#DEMO";
-    private static final String AUDIT_UNKNOWN_USER = "UNKNOWN";
     private static final long AUDIT_TTL_SECONDS = 90L * 86_400L;
 
     private final DynamoDbClient dynamoDbClient;
@@ -78,8 +84,6 @@ public class DynamoDbLedgerStore implements LedgerStore {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("pk", AttributeValue.fromS(accountPk(accountId)));
         item.put("sk", AttributeValue.fromS(SK_METADATA));
-        item.put("entityType", AttributeValue.fromS(ENTITY_ACCOUNT));
-        item.put("accountId", AttributeValue.fromS(accountId));
         item.put("displayName", AttributeValue.fromS(request.displayName()));
         item.put("currency", AttributeValue.fromS(request.currency()));
         item.put("balance", AttributeValue.fromN("0"));
@@ -118,11 +122,14 @@ public class DynamoDbLedgerStore implements LedgerStore {
     }
 
     private AccountResponse toAccountResponse(Map<String, AttributeValue> item) {
+        String accountId = item.containsKey("accountId")
+                ? item.get("accountId").s()
+                : parseAccountId(item.get("pk").s());
         BigDecimal balance = item.containsKey("balance")
                 ? new BigDecimal(item.get("balance").n())
                 : BigDecimal.ZERO;
         return new AccountResponse(
-                item.get("accountId").s(),
+                accountId,
                 item.get("displayName").s(),
                 item.get("currency").s(),
                 balance,
@@ -141,10 +148,10 @@ public class DynamoDbLedgerStore implements LedgerStore {
         String transactionId = UlidCreator.getUlid().toString();
         Instant now = Instant.now();
 
-        Map<String, AttributeValue> idempotencyItem = idempotencyItem(requestId, transactionId, accountId, now);
+        Map<String, AttributeValue> idempotencyItem = idempotencyItem(requestId, transactionId, now);
         Map<String, AttributeValue> txnItem = transactionItem(transactionId, accountId, TransactionType.DEPOSIT,
-                amount, amount, newBalance, account.currency(), description, region, now,
-                userId, username, null, null, requestId, paymentMethod, paymentReference);
+                amount, newBalance, description, region, now,
+                username, null, paymentMethod, paymentReference);
 
         TransactWriteItem idempWrite = TransactWriteItem.builder()
                 .put(Put.builder()
@@ -181,7 +188,7 @@ public class DynamoDbLedgerStore implements LedgerStore {
                             "Idempotency conflict but original transaction missing for requestId " + requestId));
         }
         return new TransactionResponse(transactionId, accountId, TransactionType.DEPOSIT, amount, amount, newBalance,
-                account.currency(), description, "POSTED", region, now, userId, username, null, null,
+                account.currency(), description, LedgerItemKeys.DEFAULT_STATUS, region, now, userId, username, null, null,
                 paymentMethod, paymentReference);
     }
 
@@ -197,10 +204,10 @@ public class DynamoDbLedgerStore implements LedgerStore {
         Instant now = Instant.now();
         BigDecimal signed = amount.negate();
 
-        Map<String, AttributeValue> idempotencyItem = idempotencyItem(requestId, transactionId, accountId, now);
+        Map<String, AttributeValue> idempotencyItem = idempotencyItem(requestId, transactionId, now);
         Map<String, AttributeValue> txnItem = transactionItem(transactionId, accountId, TransactionType.WITHDRAWAL,
-                amount, signed, newBalance, account.currency(), description, region, now,
-                userId, username, null, null, requestId, paymentMethod, paymentReference);
+                signed, newBalance, description, region, now,
+                username, null, paymentMethod, paymentReference);
 
         TransactWriteItem idempWrite = TransactWriteItem.builder()
                 .put(Put.builder()
@@ -240,7 +247,7 @@ public class DynamoDbLedgerStore implements LedgerStore {
                             "Idempotency conflict but original transaction missing for requestId " + requestId));
         }
         return new TransactionResponse(transactionId, accountId, TransactionType.WITHDRAWAL, amount, signed, newBalance,
-                account.currency(), description, "POSTED", region, now, userId, username, null, null,
+                account.currency(), description, LedgerItemKeys.DEFAULT_STATUS, region, now, userId, username, null, null,
                 paymentMethod, paymentReference);
     }
 
@@ -267,17 +274,15 @@ public class DynamoDbLedgerStore implements LedgerStore {
         BigDecimal signedOut = amount.negate();
         String description = memo == null || memo.isBlank() ? "Transfer" : memo;
 
-        Map<String, AttributeValue> idempotencyItem = idempotencyItem(requestId, outTxnId, fromAccountId, now);
+        Map<String, AttributeValue> idempotencyItem = idempotencyItem(requestId, outTxnId, now);
 
         Map<String, AttributeValue> senderTxn = transactionItem(outTxnId, fromAccountId, TransactionType.TRANSFER_OUT,
-                amount, signedOut, senderNewBalance, fromAccount.currency(), description, region, now,
-                fromUserId, fromUsername, toAccountId, toUsername, requestId,
-                PaymentMethodType.P2P, toUsername);
+                signedOut, senderNewBalance, description, region, now,
+                fromUsername, toUsername, PaymentMethodType.P2P, toUsername);
 
         Map<String, AttributeValue> receiverTxn = transactionItem(inTxnId, toAccountId, TransactionType.TRANSFER_IN,
-                amount, amount, receiverNewBalance, toAccount.currency(), description, region, now,
-                fromUserId, fromUsername, fromAccountId, fromUsername, requestId,
-                PaymentMethodType.P2P, fromUsername);
+                amount, receiverNewBalance, description, region, now,
+                fromUsername, fromUsername, PaymentMethodType.P2P, fromUsername);
 
         TransactWriteItem idempWrite = TransactWriteItem.builder()
                 .put(Put.builder()
@@ -337,11 +342,11 @@ public class DynamoDbLedgerStore implements LedgerStore {
         }
 
         TransactionResponse senderResp = new TransactionResponse(outTxnId, fromAccountId, TransactionType.TRANSFER_OUT,
-                amount, signedOut, senderNewBalance, fromAccount.currency(), description, "POSTED", region, now,
-                fromUserId, fromUsername, toAccountId, toUsername, PaymentMethodType.P2P, toUsername);
+                amount, signedOut, senderNewBalance, fromAccount.currency(), description, LedgerItemKeys.DEFAULT_STATUS,
+                region, now, fromUserId, fromUsername, toAccountId, toUsername, PaymentMethodType.P2P, toUsername);
         TransactionResponse receiverResp = new TransactionResponse(inTxnId, toAccountId, TransactionType.TRANSFER_IN,
-                amount, amount, receiverNewBalance, toAccount.currency(), description, "POSTED", region, now,
-                fromUserId, fromUsername, fromAccountId, fromUsername, PaymentMethodType.P2P, fromUsername);
+                amount, amount, receiverNewBalance, toAccount.currency(), description, LedgerItemKeys.DEFAULT_STATUS,
+                region, now, fromUserId, fromUsername, fromAccountId, fromUsername, PaymentMethodType.P2P, fromUsername);
         return new TransferResult(senderResp, receiverResp);
     }
 
@@ -399,7 +404,7 @@ public class DynamoDbLedgerStore implements LedgerStore {
                 .keyConditionExpression("pk = :pk AND begins_with(sk, :prefix)")
                 .expressionAttributeValues(Map.of(
                         ":pk", AttributeValue.fromS(accountPk(accountId)),
-                        ":prefix", AttributeValue.fromS("TXN#")
+                        ":prefix", AttributeValue.fromS(LedgerItemKeys.PREFIX_TXN)
                 ))
                 .scanIndexForward(false)
                 .limit(Math.max(1, Math.min(limit, 100)));
@@ -427,9 +432,7 @@ public class DynamoDbLedgerStore implements LedgerStore {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("pk", AttributeValue.fromS(userPk(username)));
         item.put("sk", AttributeValue.fromS(SK_METADATA));
-        item.put("entityType", AttributeValue.fromS(ENTITY_USER));
         item.put("userId", AttributeValue.fromS(userId));
-        item.put("username", AttributeValue.fromS(username));
         item.put("passwordHash", AttributeValue.fromS(passwordHash));
         item.put("displayName", AttributeValue.fromS(displayName));
         item.put("defaultAccountId", AttributeValue.fromS(defaultAccountId));
@@ -462,9 +465,12 @@ public class DynamoDbLedgerStore implements LedgerStore {
         if (item == null || item.isEmpty()) {
             return Optional.empty();
         }
+        String resolvedUsername = item.containsKey("username")
+                ? item.get("username").s()
+                : parseUsername(item.get("pk").s());
         UserResponse user = new UserResponse(
                 item.get("userId").s(),
-                item.get("username").s(),
+                resolvedUsername,
                 item.get("displayName").s(),
                 item.get("defaultAccountId").s(),
                 Instant.parse(item.get("createdAt").s())
@@ -488,10 +494,7 @@ public class DynamoDbLedgerStore implements LedgerStore {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("pk", AttributeValue.fromS(paymentUserPk(userId)));
         item.put("sk", AttributeValue.fromS(SK_CARD_DEMO));
-        item.put("entityType", AttributeValue.fromS(ENTITY_PAYMENT));
         item.put("type", AttributeValue.fromS(PaymentMethodType.DEMO_CARD));
-        item.put("brand", AttributeValue.fromS(card.brand()));
-        item.put("last4", AttributeValue.fromS(card.last4()));
         item.put("maskedReference", AttributeValue.fromS(card.maskedReference()));
         item.put("linkedAt", AttributeValue.fromS(now.toString()));
 
@@ -521,7 +524,6 @@ public class DynamoDbLedgerStore implements LedgerStore {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("pk", AttributeValue.fromS(paymentUserPk(userId)));
         item.put("sk", AttributeValue.fromS(SK_PAYPAL_DEMO));
-        item.put("entityType", AttributeValue.fromS(ENTITY_PAYMENT));
         item.put("type", AttributeValue.fromS(PaymentMethodType.DEMO_PAYPAL));
         item.put("maskedReference", AttributeValue.fromS(normalized));
         item.put("linkedAt", AttributeValue.fromS(now.toString()));
@@ -551,43 +553,42 @@ public class DynamoDbLedgerStore implements LedgerStore {
     }
 
     private PaymentMethodResponse toPaymentMethodResponse(Map<String, AttributeValue> item) {
+        String type = item.get("type").s();
+        String maskedReference = item.get("maskedReference").s();
+        String brand = item.containsKey("brand") ? item.get("brand").s() : null;
+        String last4 = item.containsKey("last4") ? item.get("last4").s() : null;
+        if (PaymentMethodType.DEMO_CARD.equals(type)) {
+            if (brand == null) {
+                brand = LedgerItemKeys.DEMO_CARD_BRAND;
+            }
+            if (last4 == null) {
+                last4 = LedgerItemKeys.extractLast4FromMaskedReference(maskedReference);
+            }
+        }
         return new PaymentMethodResponse(
-                item.get("type").s(),
-                item.containsKey("brand") ? item.get("brand").s() : null,
-                item.get("maskedReference").s(),
-                item.containsKey("last4") ? item.get("last4").s() : null,
+                type,
+                brand,
+                maskedReference,
+                last4,
                 Instant.parse(item.get("linkedAt").s())
         );
     }
 
     @Override
-    public void logAuditEvent(String userId, String username, String eventType,
-                              String ip, String userAgent, String region, String details) {
+    public void logAuditEvent(String userId, String eventType, String ip, String region, String details) {
         String eventId = UlidCreator.getUlid().toString();
         Instant now = Instant.now();
         long ttl = now.getEpochSecond() + AUDIT_TTL_SECONDS;
 
         Map<String, AttributeValue> item = new HashMap<>();
-        String pk = auditUserPk(resolveAuditUserId(userId, username));
-        item.put("pk", AttributeValue.fromS(pk));
-        item.put("sk", AttributeValue.fromS("EVENT#" + eventId));
-        item.put("entityType", AttributeValue.fromS(ENTITY_AUDIT));
-        item.put("eventId", AttributeValue.fromS(eventId));
+        item.put("pk", AttributeValue.fromS(auditUserPk(resolveAuditUserId(userId))));
+        item.put("sk", AttributeValue.fromS(LedgerItemKeys.PREFIX_EVENT + eventId));
         item.put("eventType", AttributeValue.fromS(eventType));
         item.put("region", AttributeValue.fromS(region == null ? "unknown" : region));
         item.put("createdAt", AttributeValue.fromS(now.toString()));
         item.put("ttl", AttributeValue.fromN(Long.toString(ttl)));
         if (ip != null && !ip.isBlank()) {
             item.put("ip", AttributeValue.fromS(ip));
-        }
-        if (userAgent != null && !userAgent.isBlank()) {
-            item.put("userAgent", AttributeValue.fromS(userAgent.length() > 256 ? userAgent.substring(0, 256) : userAgent));
-        }
-        if (username != null && !username.isBlank()) {
-            item.put("username", AttributeValue.fromS(username));
-        }
-        if (userId != null && !userId.isBlank()) {
-            item.put("userId", AttributeValue.fromS(userId));
         }
         if (details != null && !details.isBlank()) {
             item.put("details", AttributeValue.fromS(details.length() > 1024 ? details.substring(0, 1024) : details));
@@ -610,7 +611,7 @@ public class DynamoDbLedgerStore implements LedgerStore {
                 .keyConditionExpression("pk = :pk AND begins_with(sk, :prefix)")
                 .expressionAttributeValues(Map.of(
                         ":pk", AttributeValue.fromS(auditUserPk(userId)),
-                        ":prefix", AttributeValue.fromS("EVENT#")
+                        ":prefix", AttributeValue.fromS(LedgerItemKeys.PREFIX_EVENT)
                 ))
                 .scanIndexForward(false)
                 .limit(Math.max(1, Math.min(limit, 100)));
@@ -631,8 +632,11 @@ public class DynamoDbLedgerStore implements LedgerStore {
     }
 
     private AuditEventResponse toAuditEventResponse(Map<String, AttributeValue> item) {
+        String eventId = item.containsKey("eventId")
+                ? item.get("eventId").s()
+                : parseEventId(item.get("sk").s());
         return new AuditEventResponse(
-                item.get("eventId").s(),
+                eventId,
                 item.get("eventType").s(),
                 item.containsKey("region") ? item.get("region").s() : null,
                 item.containsKey("ip") ? item.get("ip").s() : null,
@@ -642,52 +646,34 @@ public class DynamoDbLedgerStore implements LedgerStore {
         );
     }
 
-    private Map<String, AttributeValue> idempotencyItem(String requestId, String transactionId, String accountId, Instant now) {
+    private Map<String, AttributeValue> idempotencyItem(String requestId, String transactionId, Instant now) {
         long ttl = now.getEpochSecond() + IDEMPOTENCY_TTL_SECONDS;
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("pk", AttributeValue.fromS(idempotencyPk(requestId)));
         item.put("sk", AttributeValue.fromS(SK_METADATA));
-        item.put("entityType", AttributeValue.fromS(ENTITY_IDEMPOTENCY));
-        item.put("requestId", AttributeValue.fromS(requestId));
         item.put("transactionId", AttributeValue.fromS(transactionId));
-        item.put("accountId", AttributeValue.fromS(accountId));
-        item.put("createdAt", AttributeValue.fromS(now.toString()));
         item.put("ttl", AttributeValue.fromN(Long.toString(ttl)));
         return item;
     }
 
     private Map<String, AttributeValue> transactionItem(String transactionId, String accountId, String type,
-                                                        BigDecimal amount, BigDecimal signedAmount, BigDecimal balanceAfter,
-                                                        String currency, String description, String region, Instant now,
-                                                        String userId, String username,
-                                                        String counterpartyAccountId, String counterpartyUsername,
-                                                        String requestId, String paymentMethod, String paymentReference) {
+                                                        BigDecimal signedAmount, BigDecimal balanceAfter,
+                                                        String description, String region, Instant now,
+                                                        String createdByUsername, String counterpartyUsername,
+                                                        String paymentMethod, String paymentReference) {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("pk", AttributeValue.fromS(accountPk(accountId)));
         item.put("sk", AttributeValue.fromS(txnSk(transactionId)));
         item.put("gsi1pk", AttributeValue.fromS(transactionGsiPk(transactionId)));
-        item.put("gsi1sk", AttributeValue.fromS(transactionGsiPk(transactionId)));
-        item.put("entityType", AttributeValue.fromS(ENTITY_TRANSACTION));
-        item.put("transactionId", AttributeValue.fromS(transactionId));
-        item.put("accountId", AttributeValue.fromS(accountId));
+        item.put("gsi1sk", AttributeValue.fromS(SK_METADATA));
         item.put("type", AttributeValue.fromS(type));
-        item.put("amount", AttributeValue.fromN(amount.toPlainString()));
         item.put("signedAmount", AttributeValue.fromN(signedAmount.toPlainString()));
         item.put("balanceAfter", AttributeValue.fromN(balanceAfter.toPlainString()));
-        item.put("currency", AttributeValue.fromS(currency));
         item.put("description", AttributeValue.fromS(description));
-        item.put("status", AttributeValue.fromS("POSTED"));
         item.put("region", AttributeValue.fromS(region));
         item.put("createdAt", AttributeValue.fromS(now.toString()));
-        item.put("requestId", AttributeValue.fromS(requestId));
-        if (userId != null) {
-            item.put("createdByUserId", AttributeValue.fromS(userId));
-        }
-        if (username != null) {
-            item.put("createdByUsername", AttributeValue.fromS(username));
-        }
-        if (counterpartyAccountId != null) {
-            item.put("counterpartyAccountId", AttributeValue.fromS(counterpartyAccountId));
+        if (createdByUsername != null) {
+            item.put("createdByUsername", AttributeValue.fromS(createdByUsername));
         }
         if (counterpartyUsername != null) {
             item.put("counterpartyUsername", AttributeValue.fromS(counterpartyUsername));
@@ -702,20 +688,41 @@ public class DynamoDbLedgerStore implements LedgerStore {
     }
 
     private TransactionResponse toTransactionResponse(Map<String, AttributeValue> item) {
-        BigDecimal amount = new BigDecimal(item.get("amount").n());
-        BigDecimal signed = item.containsKey("signedAmount") ? new BigDecimal(item.get("signedAmount").n()) : amount;
-        BigDecimal balanceAfter = item.containsKey("balanceAfter") ? new BigDecimal(item.get("balanceAfter").n()) : null;
+        String transactionId = item.containsKey("transactionId")
+                ? item.get("transactionId").s()
+                : parseTransactionId(item.get("sk").s());
+        String accountId = item.containsKey("accountId")
+                ? item.get("accountId").s()
+                : parseAccountId(item.get("pk").s());
+
+        BigDecimal signed = item.containsKey("signedAmount")
+                ? new BigDecimal(item.get("signedAmount").n())
+                : new BigDecimal(item.get("amount").n());
+        BigDecimal amount = item.containsKey("amount")
+                ? new BigDecimal(item.get("amount").n())
+                : signed.abs();
+        BigDecimal balanceAfter = item.containsKey("balanceAfter")
+                ? new BigDecimal(item.get("balanceAfter").n())
+                : null;
+
         String type = item.containsKey("type") ? item.get("type").s() : TransactionType.DEPOSIT;
+        String currency = item.containsKey("currency")
+                ? item.get("currency").s()
+                : LedgerItemKeys.DEFAULT_CURRENCY;
+        String status = item.containsKey("status")
+                ? item.get("status").s()
+                : LedgerItemKeys.DEFAULT_STATUS;
+
         return new TransactionResponse(
-                item.get("transactionId").s(),
-                item.get("accountId").s(),
+                transactionId,
+                accountId,
                 type,
                 amount,
                 signed,
                 balanceAfter,
-                item.get("currency").s(),
+                currency,
                 item.get("description").s(),
-                item.get("status").s(),
+                status,
                 item.get("region").s(),
                 Instant.parse(item.get("createdAt").s()),
                 item.containsKey("createdByUserId") ? item.get("createdByUserId").s() : null,
@@ -725,41 +732,6 @@ public class DynamoDbLedgerStore implements LedgerStore {
                 item.containsKey("paymentMethod") ? item.get("paymentMethod").s() : null,
                 item.containsKey("paymentReference") ? item.get("paymentReference").s() : null
         );
-    }
-
-    private static String accountPk(String accountId) {
-        return "ACCOUNT#" + accountId;
-    }
-
-    private static String txnSk(String transactionId) {
-        return "TXN#" + transactionId;
-    }
-
-    private static String transactionGsiPk(String transactionId) {
-        return "TXN#" + transactionId;
-    }
-
-    private static String idempotencyPk(String requestId) {
-        return "IDEMPOTENCY#" + requestId;
-    }
-
-    private static String userPk(String username) {
-        return "USER#" + username;
-    }
-
-    private static String paymentUserPk(String userId) {
-        return "PAYMENT#USER#" + userId;
-    }
-
-    private static String auditUserPk(String userId) {
-        return "AUDIT#USER#" + userId;
-    }
-
-    private static String resolveAuditUserId(String userId, String username) {
-        if (userId != null && !userId.isBlank()) {
-            return userId;
-        }
-        return AUDIT_UNKNOWN_USER;
     }
 
     private static String encodeCursor(Map<String, AttributeValue> key) {

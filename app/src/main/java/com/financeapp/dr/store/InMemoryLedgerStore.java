@@ -32,7 +32,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @ConditionalOnProperty(name = "app.storage.type", havingValue = "memory", matchIfMissing = true)
 public class InMemoryLedgerStore implements LedgerStore {
 
-    private static final String AUDIT_UNKNOWN_USER = "UNKNOWN";
 
     private final Map<String, AccountState> accounts = new ConcurrentHashMap<>();
     private final Map<String, List<TransactionResponse>> txnsByAccount = new ConcurrentHashMap<>();
@@ -250,11 +249,11 @@ public class InMemoryLedgerStore implements LedgerStore {
     }
 
     @Override
-    public synchronized void logAuditEvent(String userId, String username, String eventType,
-                                           String ip, String userAgent, String region, String details) {
-        String key = userId != null && !userId.isBlank() ? userId : AUDIT_UNKNOWN_USER;
+    public synchronized void logAuditEvent(String userId, String eventType,
+                                           String ip, String region, String details) {
+        String key = LedgerItemKeys.resolveAuditUserId(userId);
         AuditEventResponse event = new AuditEventResponse(
-                UlidCreator.getUlid().toString(), eventType, region, ip, userAgent, details, Instant.now());
+                UlidCreator.getUlid().toString(), eventType, region, ip, null, details, Instant.now());
         auditsByUser.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>()).add(event);
     }
 

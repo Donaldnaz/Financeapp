@@ -24,6 +24,13 @@ locals {
     ManagedBy   = "terraform"
     Portfolio   = "true"
   }
+  google_redirect_uri = var.google_redirect_uri != "" ? var.google_redirect_uri : "http://${var.domain_name}/login/oauth2/code/google"
+  oauth_environment = var.google_client_id != "" ? {
+    GOOGLE_CLIENT_ID       = var.google_client_id
+    GOOGLE_CLIENT_SECRET   = var.google_client_secret
+    GOOGLE_REDIRECT_URI    = local.google_redirect_uri
+    SPRING_PROFILES_ACTIVE = "oauth"
+  } : {}
 }
 
 resource "aws_ecr_repository" "app" {
@@ -132,14 +139,14 @@ module "compute_primary" {
     "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
     "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
   ]
-  environment = {
+  environment = merge({
     APP_STORAGE_TYPE   = "dynamodb"
     TRANSACTIONS_TABLE = module.data_global.table_name
     AWS_REGION         = var.primary_region
     APP_JWT_SECRET     = var.jwt_secret
     APP_SEED_ENABLED   = "true"
     APP_COOKIE_SECURE  = "false"
-  }
+  }, local.oauth_environment)
   tags = local.tags
 }
 
@@ -163,14 +170,14 @@ module "compute_secondary" {
     "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
     "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
   ]
-  environment = {
+  environment = merge({
     APP_STORAGE_TYPE   = "dynamodb"
     TRANSACTIONS_TABLE = module.data_global.table_name
     AWS_REGION         = var.secondary_region
     APP_JWT_SECRET     = var.jwt_secret
     APP_SEED_ENABLED   = "true"
     APP_COOKIE_SECURE  = "false"
-  }
+  }, local.oauth_environment)
   tags = local.tags
 }
 

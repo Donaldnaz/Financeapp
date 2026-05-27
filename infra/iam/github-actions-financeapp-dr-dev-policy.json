@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EcrAuth",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "EcrPushDevRepo",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeRepositories",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart"
+      ],
+      "Resource": "arn:aws:ecr:us-east-1:920375856513:repository/financeapp-dr-dev-repo"
+    },
+    {
+      "Sid": "EcsDeployPrimary",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:UpdateService"
+      ],
+      "Resource": "arn:aws:ecs:us-east-1:920375856513:service/financeapp-dr-dev-primary-cluster/financeapp-dr-dev-primary-service"
+    },
+    {
+      "Sid": "EcsDeploySecondary",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:UpdateService"
+      ],
+      "Resource": "arn:aws:ecs:us-west-2:920375856513:service/financeapp-dr-dev-secondary-cluster/financeapp-dr-dev-secondary-service"
+    }
+  ]
+}

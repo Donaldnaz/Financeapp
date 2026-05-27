@@ -100,17 +100,30 @@ Legacy `OPENAI_*` env vars still work as aliases for `ASSISTANT_*`.
 ### Google sign-in (optional)
 
 1. Create an OAuth 2.0 Web client in [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
-2. Authorized redirect URI: `http://localhost:8080/login/oauth2/code/google` (add your deployed ALB URL for AWS).
-3. Set environment variables and activate the `oauth` profile:
+2. Add authorized redirect URIs:
+   - Local: `http://localhost:8080/login/oauth2/code/google`
+   - AWS dev: `http://<primary-alb-dns>/login/oauth2/code/google` (or your Route53 name when DNS works)
+3. **Local:** add to repo-root `.env`:
 
 ```bash
-export GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-export GOOGLE_CLIENT_SECRET=your-client-secret
-export SPRING_PROFILES_ACTIVE=oauth
-./run-local.sh
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
 ```
 
-The **Continue with Google** button appears on login/signup when `GOOGLE_CLIENT_ID` is set.
+Then run `./run-local.sh`. The app auto-activates the `oauth` profile when `GOOGLE_CLIENT_ID` is set.
+
+4. **AWS dev:** pass the same values to Terraform (do not commit secrets):
+
+```bash
+export TF_VAR_google_client_id='your-client-id.apps.googleusercontent.com'
+export TF_VAR_google_client_secret='your-client-secret'
+# If public DNS is not live yet, point at the primary ALB:
+export TF_VAR_google_redirect_uri='http://financeapp-dr-dev-primary-alb-....us-east-1.elb.amazonaws.com/login/oauth2/code/google'
+./infra-deploy.sh apply dev
+./deploy-dev.sh
+```
+
+The **Continue with Google** button appears on login/signup when `GOOGLE_CLIENT_ID` is set on the ECS task.
 
 Example prompts after signing in as `alice` / `Password!1`:
 
@@ -136,14 +149,14 @@ Assistant writes are always **propose → confirm**; the LLM never receives pass
 
 ### DynamoDB single-table layout
 
-| Entity | pk | sk | gsi1pk | Key attrs |
-|---|---|---|---|---|
-| Account | `ACCOUNT#<id>` | `METADATA` | — | `balance` (N), `currency`, `displayName` |
-| Transaction | `ACCOUNT#<id>` | `TXN#<ulid>` | `TXN#<id>` | `type`, `amount`, `signedAmount`, `balanceAfter`, `paymentMethod`, `paymentReference`, `counterpartyUsername` |
-| User | `USER#<username>` | `METADATA` | — | `passwordHash` (BCrypt), `defaultAccountId` |
-| PaymentMethod | `PAYMENT#USER#<userId>` | `CARD#DEMO` or `PAYPAL#DEMO` | — | `type`, `brand`, `maskedReference`, `last4`, `linkedAt` |
-| Idempotency | `IDEMPOTENCY#<reqId>` | `METADATA` | — | `transactionId`, 24h TTL |
-| Audit | `AUDIT#USER#<userId>` | `EVENT#<ulid>` | — | `eventType`, `ip`, `userAgent`, `region`, `details`, 90d TTL |
+| Entity | pk | sk | gsi1pk | gsi1sk | Stored attributes |
+|---|---|---|---|---|---|
+| Account | `ACCOUNT#<id>` | `METADATA` | — | — | `displayName`, `currency`, `balance`, `createdAt` |
+| Transaction | `ACCOUNT#<id>` | `TXN#<ulid>` | `TXN#<id>` | `METADATA` | `type`, `signedAmount`, `balanceAfter`, `description`, `region`, `createdAt`, optional: `createdByUsername`, `counterpartyUsername`, `paymentMethod`, `paymentReference` |
+| User | `USER#<username>` | `METADATA` | — | — | `userId`, `passwordHash`, `displayName`, `defaultAccountId`, `createdAt` |
+| PaymentMethod | `PAYMENT#USER#<userId>` | `CARD#DEMO` or `PAYPAL#DEMO` | — | — | `type`, `maskedReference`, `linkedAt` |
+| Idempotency | `IDEMPOTENCY#<reqId>` | `METADATA` | — | — | `transactionId`, 24h TTL |
+| Audit | `AUDIT#USER#<userId>` | `EVENT#<ulid>` | — | — | `eventType`, `ip`, `region`, `details`, `createdAt`, 90d TTL |
 
 ## Demo credentials
 

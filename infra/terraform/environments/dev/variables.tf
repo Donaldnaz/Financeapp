@@ -48,3 +48,22 @@ variable "jwt_secret" {
   description = "HS256 signing key for app JWTs (min 32 chars)."
   sensitive   = true
 }
+
+variable "google_client_id" {
+  type        = string
+  description = "Google OAuth client ID. When set, enables Continue with Google on login/signup."
+  default     = ""
+}
+
+variable "google_client_secret" {
+  type        = string
+  description = "Google OAuth client secret."
+  sensitive   = true
+  default     = ""
+}
+
+variable "google_redirect_uri" {
+  type        = string
+  description = "OAuth redirect URI registered in Google Cloud Console. Defaults to http://<domain_name>/login/oauth2/code/google."
+  default     = ""
+}

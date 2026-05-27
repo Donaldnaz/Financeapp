@@ -73,10 +73,8 @@ public interface LedgerStore {
     PaymentMethodResponse saveDemoPayPal(String userId, String email);
 
     void logAuditEvent(String userId,
-                       String username,
                        String eventType,
                        String ip,
-                       String userAgent,
                        String region,
                        String details);
 

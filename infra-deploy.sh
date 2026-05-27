@@ -7,6 +7,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT/scripts/load-env.sh"
 load_repo_env "$ROOT"
+export_terraform_oauth_vars "$ROOT"
 
 usage() {
   cat <<'EOF'
@@ -21,7 +22,9 @@ Apply options:
   - Or set AUTO_APPROVE=1 to apply directly without a saved plan.
 
 Secrets (optional; override terraform.tfvars via .env or export):
-  TF_VAR_jwt_secret, TF_VAR_secret_value, AUTO_APPROVE
+  TF_VAR_jwt_secret, TF_VAR_secret_value, TF_VAR_google_client_id, TF_VAR_google_client_secret
+  GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET in .env are mapped automatically for dev/prod apply.
+  AUTO_APPROVE
   Copy .env.example to .env and edit once for repeatable deploys.
 
 Examples:
@@ -92,7 +95,11 @@ tf_init
 
 case "$CMD" in
   plan)
-    terraform -chdir="$TF_DIR" plan -input=false -out=tfplan "${EXTRA_ARGS[@]}"
+    if ((${#EXTRA_ARGS[@]})); then
+      terraform -chdir="$TF_DIR" plan -input=false -out=tfplan "${EXTRA_ARGS[@]}"
+    else
+      terraform -chdir="$TF_DIR" plan -input=false -out=tfplan
+    fi
     echo "Plan saved to $PLAN_FILE"
     ;;
   apply)
@@ -100,7 +107,11 @@ case "$CMD" in
       terraform -chdir="$TF_DIR" apply -input=false tfplan
       rm -f "$PLAN_FILE"
     elif [[ "${AUTO_APPROVE:-}" == "1" ]]; then
-      terraform -chdir="$TF_DIR" apply -input=false -auto-approve "${EXTRA_ARGS[@]}"
+      if ((${#EXTRA_ARGS[@]})); then
+        terraform -chdir="$TF_DIR" apply -input=false -auto-approve "${EXTRA_ARGS[@]}"
+      else
+        terraform -chdir="$TF_DIR" apply -input=false -auto-approve
+      fi
     else
       echo "No saved plan at $PLAN_FILE. Run './infra-deploy.sh plan $ENV' first, or set AUTO_APPROVE=1." >&2
       exit 1
@@ -115,7 +126,11 @@ case "$CMD" in
       exit 1
     fi
     empty_dev_ecr_if_destroy
-    terraform -chdir="$TF_DIR" destroy -input=false -auto-approve "${EXTRA_ARGS[@]}"
+    if ((${#EXTRA_ARGS[@]})); then
+      terraform -chdir="$TF_DIR" destroy -input=false -auto-approve "${EXTRA_ARGS[@]}"
+    else
+      terraform -chdir="$TF_DIR" destroy -input=false -auto-approve
+    fi
     rm -f "$PLAN_FILE"
     ;;
   *)
