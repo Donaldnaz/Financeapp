@@ -147,6 +147,26 @@ public class LedgerServiceImpl implements LedgerService {
     }
 
     @Override
+    public UserResponse signupOAuth(String username, String displayName, String ip, String userAgent) {
+        Optional<UserWithPasswordHash> existing = store.findUserByUsername(username);
+        if (existing.isPresent()) {
+            return existing.get().user();
+        }
+        AccountResponse account = store.createAccount(
+                new AccountRequest(displayName + " Checking", "USD"));
+        String oauthPassword = UUID.randomUUID() + "Aa1!OAuth";
+        UserResponse user = createUser(username, oauthPassword, displayName, account.accountId());
+        store.createDemoCard(user.userId(), user.username());
+        store.deposit(UUID.randomUUID().toString(), account.accountId(),
+                user.userId(), user.username(), SIGNUP_BONUS, "Sign-up welcome bonus",
+                PaymentMethodType.WELCOME_BONUS, "Welcome bonus", region);
+        store.logAuditEvent(user.userId(), user.username(), AuditEventType.SIGNUP, ip, userAgent, region,
+                "accountId=" + account.accountId() + " welcomeBonus=" + SIGNUP_BONUS.toPlainString()
+                        + " provider=google");
+        return user;
+    }
+
+    @Override
     public UserResponse createUser(String username, String rawPassword, String displayName, String defaultAccountId) {
         String hash = passwordEncoder.encode(rawPassword);
         return store.createUser(username, hash, displayName, defaultAccountId);
@@ -188,6 +208,11 @@ public class LedgerServiceImpl implements LedgerService {
                 .map(u -> u.user().userId())
                 .orElse(null);
         store.logAuditEvent(userId, username, AuditEventType.LOGIN_FAILURE, ip, userAgent, region, reason);
+    }
+
+    @Override
+    public void recordAssistantQuery(String userId, String username, String ip, String userAgent, String summary) {
+        store.logAuditEvent(userId, username, AuditEventType.ASSISTANT_QUERY, ip, userAgent, region, summary);
     }
 
     @Override

@@ -38,6 +38,8 @@ public interface LedgerService {
 
     UserResponse signup(SignupRequest request, String ip, String userAgent);
 
+    UserResponse signupOAuth(String username, String displayName, String ip, String userAgent);
+
     UserResponse createUser(String username, String rawPassword, String displayName, String defaultAccountId);
 
     Optional<UserWithPasswordHash> findUserByUsername(String username);
@@ -53,6 +55,8 @@ public interface LedgerService {
     void recordLoginSuccess(String userId, String username, String ip, String userAgent);
 
     void recordLoginFailure(String username, String ip, String userAgent, String reason);
+
+    void recordAssistantQuery(String userId, String username, String ip, String userAgent, String summary);
 
     PageResult<AuditEventResponse> listAuditEvents(String userId, String cursor, int limit);
 }

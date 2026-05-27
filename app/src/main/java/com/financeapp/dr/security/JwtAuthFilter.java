@@ -1,5 +1,7 @@
 package com.financeapp.dr.security;
 
+import com.financeapp.dr.service.AuthService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -26,9 +28,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
 
     private final JwtService jwtService;
+    private final AuthService authService;
 
-    public JwtAuthFilter(JwtService jwtService) {
+    public JwtAuthFilter(JwtService jwtService, AuthService authService) {
         this.jwtService = jwtService;
+        this.authService = authService;
     }
 
     @Override
@@ -44,6 +48,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             principal, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
+                } catch (ExpiredJwtException ex) {
+                    log.debug("JWT expired: {}", ex.getMessage());
+                    authService.clearSession(response);
+                    request.setAttribute(AuthService.JWT_EXPIRED_ATTRIBUTE, true);
                 } catch (Exception ex) {
                     log.debug("Rejecting JWT: {}", ex.getMessage());
                 }

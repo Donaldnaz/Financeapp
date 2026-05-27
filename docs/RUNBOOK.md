@@ -98,7 +98,16 @@ This runbook covers active-active operations for the Java API across `us-east-1`
    - `curl -sS -H "Authorization: Bearer $J2" http://<alb-secondary-dns>/api/accounts/$ACC2 | jq .balance` should report the post-transfer balance — proves DDB Global Table replication + cross-region JWT validation.
    - `curl -sS -H "Authorization: Bearer $J2" http://<alb-secondary-dns>/api/audit/me | jq '.items[].eventType'` should show the same audit events streamed from the other region.
 
-## Dev deployment (CI/CD)
+## Dev deployment (two layers)
+
+Set variables once in repo-root `.env` (from `.env.example`). Scripts load it automatically; the Spring app ignores deploy/Terraform keys in that file.
+
+```bash
+cp .env.example .env
+# edit AWS_ACCOUNT_ID, ECR_*, ECS_*, optional TF_VAR_jwt_secret / TF_VAR_secret_value
+```
+
+### Application (every release)
 
 Push to `main` triggers `.github/workflows/ci.yml`:
 
@@ -106,7 +115,49 @@ Push to `main` triggers `.github/workflows/ci.yml`:
 2. Build and push `financeapp-dr-dev-repo:latest` (and `:$GITHUB_SHA`) to ECR in `us-east-1`
 3. `aws ecs update-service --force-new-deployment` on both dev ECS services (primary + secondary after ECR replication)
 
-Run `terraform apply` manually only when infrastructure modules change.
+Manual equivalent:
+
+```bash
+./deploy-dev.sh
+```
+
+`deploy-dev.sh` reads ECS/ECR settings from `.env` first, then Terraform outputs, then hardcoded fallbacks.
+
+### Infrastructure (module or env changes only)
+
+Use the Terraform wrapper — do **not** run apply on every app deploy:
+
+```bash
+./infra-deploy.sh plan dev
+./infra-deploy.sh apply dev
+# optional: override image at apply time
+./infra-deploy.sh apply dev -var='container_image=920375856513.dkr.ecr.us-east-1.amazonaws.com/financeapp-dr-dev-repo:latest'
+```
+
+Secrets (set in `.env` or export before running):
+
+```bash
+# in .env:
+# TF_VAR_jwt_secret=...
+# TF_VAR_secret_value=...
+./infra-deploy.sh apply dev
+```
+
+Inspect outputs:
+
+```bash
+./infra-deploy.sh output dev
+PRIMARY_ALB=$(terraform -chdir=infra/terraform/environments/dev output -raw primary_alb_dns)
+curl -sS "http://${PRIMARY_ALB}/health"
+```
+
+Teardown:
+
+```bash
+CONFIRM=destroy ./infra-deploy.sh destroy dev
+```
+
+GitHub Actions: **Apply Infrastructure (Terraform)** (`workflow_dispatch`, confirm with `apply`) or **Destroy DEV Infrastructure** (confirm with `destroy`).
 
 ## Inspecting and resetting state
 

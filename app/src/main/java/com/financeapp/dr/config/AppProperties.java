@@ -3,7 +3,7 @@ package com.financeapp.dr.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(String region, Storage storage, Seed seed, Cookie cookie) {
+public record AppProperties(String region, Storage storage, Seed seed, Cookie cookie, Assistant assistant) {
 
     public record Storage(String type, String tableName) {
     }
@@ -12,5 +12,10 @@ public record AppProperties(String region, Storage storage, Seed seed, Cookie co
     }
 
     public record Cookie(boolean secure) {
+    }
+
+    public record Assistant(boolean enabled, String provider, Llm llm) {
+        public record Llm(String apiKey, String model, String baseUrl) {
+        }
     }
 }

@@ -34,17 +34,15 @@
                 th:text="${#temporals.format(e.createdAt(), 'MMM d, yyyy HH:mm')}">when</td>
             <td class="px-6 py-4">
               <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold"
-                    th:classappend="${e.eventType() == 'SIGNUP' ? 'bg-violet-100 text-violet-800'
-                      : (e.eventType() == 'LOGIN_SUCCESS' ? 'bg-emerald-100 text-emerald-800'
-                      : (e.eventType() == 'LOGIN_FAILURE' ? 'bg-rose-100 text-rose-800'
-                      : (e.eventType() == 'TRANSFER_OUT' || e.eventType() == 'WITHDRAWAL' || e.eventType() == 'WITHDRAWAL_PAYPAL' ? 'bg-amber-100 text-amber-800'
-                      : (e.eventType() == 'DEPOSIT_CARD' ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-bank-100 text-bank-800')))}"
+                    th:classappend="${T(com.financeapp.dr.web.AuditEventUi).badgeClass(e.eventType())}"
                     th:text="${e.eventType()}">EVENT</span>
             </td>
-            <td class="px-6 py-4 font-mono text-xs text-slate-600" th:text="${e.region() ?: '—'}">region</td>
-            <td class="px-6 py-4 font-mono text-xs text-slate-600" th:text="${e.ip() ?: '—'}">ip</td>
-            <td class="px-6 py-4 text-xs text-slate-600 max-w-xs truncate" th:text="${e.details() ?: '—'}">details</td>
+            <td class="px-6 py-4 font-mono text-xs text-slate-600"
+                th:text="${T(com.financeapp.dr.web.AuditEventUi).displayValue(e.region())}">region</td>
+            <td class="px-6 py-4 font-mono text-xs text-slate-600"
+                th:text="${T(com.financeapp.dr.web.AuditEventUi).displayValue(e.ip())}">ip</td>
+            <td class="px-6 py-4 text-xs text-slate-600 max-w-xs truncate"
+                th:text="${T(com.financeapp.dr.web.AuditEventUi).displayValue(e.details())}">details</td>
           </tr>
         </tbody>
       </table>

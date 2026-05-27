@@ -61,6 +61,7 @@ public class WebController {
                             @RequestParam(value = "transferred", required = false) String transferred,
                             @RequestParam(value = "deposited", required = false) String deposited,
                             @RequestParam(value = "withdrawn", required = false) String withdrawn,
+                            @RequestParam(value = "stale", required = false) String stale,
                             Model model) {
         AccountResponse account = ledger.getAccount(user.accountId());
         PageResult<TransactionResponse> recent = ledger.listTransactionsForAccount(user.accountId(), null, 10);
@@ -75,6 +76,8 @@ public class WebController {
             model.addAttribute("notice", "Deposit posted from your demo card.");
         } else if (withdrawn != null) {
             model.addAttribute("notice", "Withdrawal sent to PayPal.");
+        } else if (stale != null) {
+            model.addAttribute("error", staleFormMessage());
         }
         return "dashboard";
     }
@@ -94,7 +97,9 @@ public class WebController {
     }
 
     @GetMapping("/transfer")
-    public String transferForm(@AuthenticationPrincipal AuthenticatedUser user, Model model) {
+    public String transferForm(@AuthenticationPrincipal AuthenticatedUser user,
+                               @RequestParam(value = "stale", required = false) String stale,
+                               Model model) {
         AccountResponse account = ledger.getAccount(user.accountId());
         List<String> recipients = ledger.listSeededUsernames().stream()
                 .filter(u -> !u.equalsIgnoreCase(user.username()))
@@ -102,6 +107,7 @@ public class WebController {
         model.addAttribute("user", user);
         model.addAttribute("account", account);
         model.addAttribute("recipients", recipients);
+        applyStaleMessage(stale, model);
         return "transfer";
     }
 
@@ -112,7 +118,7 @@ public class WebController {
                                  @AuthenticationPrincipal AuthenticatedUser user,
                                  HttpServletRequest request,
                                  Model model) {
-        String normalizedRecipient = toUsername == null ? "" : toUsername.trim().toLowerCase();
+        String normalizedRecipient = UsernameInput.normalizeRecipient(toUsername);
         if (normalizedRecipient.isBlank()) {
             return reTransfer(user, "Please choose a recipient.", model);
         }
@@ -148,10 +154,13 @@ public class WebController {
     }
 
     @GetMapping("/deposit")
-    public String depositForm(@AuthenticationPrincipal AuthenticatedUser user, Model model) {
+    public String depositForm(@AuthenticationPrincipal AuthenticatedUser user,
+                              @RequestParam(value = "stale", required = false) String stale,
+                              Model model) {
         model.addAttribute("user", user);
         model.addAttribute("account", ledger.getAccount(user.accountId()));
         model.addAttribute("demoCard", ledger.getDemoCard(user.userId()).orElse(null));
+        applyStaleMessage(stale, model);
         return "deposit";
     }
 
@@ -184,10 +193,13 @@ public class WebController {
     }
 
     @GetMapping("/withdraw")
-    public String withdrawForm(@AuthenticationPrincipal AuthenticatedUser user, Model model) {
+    public String withdrawForm(@AuthenticationPrincipal AuthenticatedUser user,
+                               @RequestParam(value = "stale", required = false) String stale,
+                               Model model) {
         model.addAttribute("user", user);
         model.addAttribute("account", ledger.getAccount(user.accountId()));
         model.addAttribute("demoPayPal", ledger.getDemoPayPal(user.userId()).orElse(null));
+        applyStaleMessage(stale, model);
         return "withdraw";
     }
 
@@ -240,5 +252,15 @@ public class WebController {
         if (!accountId.equals(user.accountId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your account");
         }
+    }
+
+    private static void applyStaleMessage(String stale, Model model) {
+        if (stale != null && !model.containsAttribute("error")) {
+            model.addAttribute("error", staleFormMessage());
+        }
+    }
+
+    private static String staleFormMessage() {
+        return "This form expired. Refresh the page and try again.";
     }
 }

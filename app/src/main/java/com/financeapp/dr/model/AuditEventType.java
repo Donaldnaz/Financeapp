@@ -10,6 +10,7 @@ public final class AuditEventType {
     public static final String WITHDRAWAL_PAYPAL = "WITHDRAWAL_PAYPAL";
     public static final String TRANSFER_OUT = "TRANSFER_OUT";
     public static final String TRANSFER_IN = "TRANSFER_IN";
+    public static final String ASSISTANT_QUERY = "ASSISTANT_QUERY";
 
     private AuditEventType() {
     }

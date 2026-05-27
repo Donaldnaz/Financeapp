@@ -30,6 +30,18 @@ terraform import aws_s3_bucket_versioning.tf_state financeapp-tf-state-920375856
 terraform apply   # no-op once imported
 ```
 
+## Deploy scripts (repo root)
+
+| Script | Purpose |
+|---|---|
+| `./infra-deploy.sh plan\|apply\|output\|destroy <dev\|prod>` | Terraform lifecycle (S3 remote state) |
+| `./deploy-dev.sh` | Build/push app image + ECS rollout (both regions) |
+
+```bash
+./infra-deploy.sh plan dev && ./infra-deploy.sh apply dev
+./deploy-dev.sh
+```
+
 This stack ensures `Versioning=Enabled` on the S3 bucket that backs every other Terraform state file. Local state is gitignored.
 
 ## Notes

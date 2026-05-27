@@ -6,9 +6,9 @@
     <div class="mx-auto h-16 w-16 rounded-2xl bg-bank-50 flex items-center justify-center mb-6">
       <span class="text-2xl font-display text-bank-700" th:text="${status} ?: '!'">!</span>
     </div>
-    <h1 class="text-xl font-semibold text-bank-950" th:text="${error} ?: 'Something went wrong'">Error</h1>
-    <p class="mt-2 text-sm text-slate-500" th:text="${message} ?: 'Please try again or contact support.'">Message</p>
-    <a th:href="@{/login}" class="btn-primary mt-8">Return to iTrust</a>
+    <h1 class="text-xl font-semibold text-bank-950" th:text="${errorTitle} ?: 'Something went wrong'">Error</h1>
+    <p class="mt-2 text-sm text-slate-500" th:text="${errorMessage} ?: 'Please try again or contact support.'">Message</p>
+    <a th:href="@{/dashboard}" class="btn-primary mt-8">Return to iTrust</a>
   </div>
 </body>
 </html>

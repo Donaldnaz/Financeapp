@@ -49,6 +49,8 @@
     <button type="submit" class="btn-primary w-full py-3.5 mt-2">Create my account</button>
   </form>
 
+  <div th:replace="~{fragments/google-signin :: googleSignIn}"></div>
+
   <p class="mt-8 text-center text-sm text-slate-600">
     Already banking with us?
     <a th:href="@{/login}" class="font-semibold text-bank-700 hover:text-bank-900">Sign in</a>

@@ -1,0 +1,75 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="signoutModal">
+  <form id="itrust-signout-form" th:action="@{/logout}" method="post" class="hidden" aria-hidden="true"></form>
+
+  <div id="itrust-signout-modal"
+       class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="itrust-signout-title"
+       aria-describedby="itrust-signout-desc"
+       aria-hidden="true">
+    <button type="button" id="itrust-signout-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" aria-label="Close sign-out dialog"></button>
+    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-elevated ring-1 ring-slate-200/80">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-200/80 mb-4">
+        <svg class="h-6 w-6 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+        </svg>
+      </div>
+      <h2 id="itrust-signout-title" class="text-lg font-semibold text-bank-900">Sign out?</h2>
+      <p id="itrust-signout-desc" class="mt-2 text-sm text-slate-600 leading-relaxed">
+        You'll need to sign in again to access your accounts and continue where you left off.
+      </p>
+      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button type="button" id="itrust-signout-cancel" class="btn-secondary w-full sm:w-auto">Stay signed in</button>
+        <button type="button" id="itrust-signout-confirm" class="btn-primary w-full sm:w-auto">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const modalEl = document.getElementById('itrust-signout-modal');
+      const backdropEl = document.getElementById('itrust-signout-backdrop');
+      const cancelEl = document.getElementById('itrust-signout-cancel');
+      const confirmEl = document.getElementById('itrust-signout-confirm');
+      const formEl = document.getElementById('itrust-signout-form');
+      const openEls = document.querySelectorAll('.itrust-signout-open');
+      if (!modalEl || !formEl || openEls.length === 0) return;
+
+      let lastFocused = null;
+
+      function openModal() {
+        lastFocused = document.activeElement;
+        modalEl.classList.remove('hidden');
+        modalEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+        cancelEl.focus();
+      }
+
+      function closeModal() {
+        modalEl.classList.add('hidden');
+        modalEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+        if (lastFocused && typeof lastFocused.focus === 'function') {
+          lastFocused.focus();
+        }
+      }
+
+      openEls.forEach(function (el) {
+        el.addEventListener('click', openModal);
+      });
+      cancelEl.addEventListener('click', closeModal);
+      backdropEl.addEventListener('click', closeModal);
+      confirmEl.addEventListener('click', function () {
+        formEl.submit();
+      });
+
+      modalEl.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeModal();
+        }
+      });
+    })();
+  </script>
+</div>

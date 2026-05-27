@@ -20,3 +20,4 @@ override.tf.json
 # Local env files
 .env
 .env.*
+!.env.example

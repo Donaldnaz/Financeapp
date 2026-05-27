@@ -16,6 +16,7 @@
   </div>
 
   <form th:action="@{/login}" method="post" class="space-y-5">
+    <input type="hidden" name="returnUrl" th:if="${returnUrl}" th:value="${returnUrl}" />
     <div>
       <label for="username" class="block text-sm font-medium text-slate-700 mb-1.5">Username</label>
       <input id="username" name="username" type="text" required autofocus autocomplete="username"
@@ -30,6 +31,8 @@
     </div>
     <button type="submit" class="btn-primary w-full py-3.5">Sign in securely</button>
   </form>
+
+  <div th:replace="~{fragments/google-signin :: googleSignIn}"></div>
 
   <p class="mt-8 text-center text-sm text-slate-600">
     Don't have an account?

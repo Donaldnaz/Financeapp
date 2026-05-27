@@ -29,9 +29,12 @@
       <form th:action="@{/withdraw}" method="post" class="space-y-5">
         <div>
           <label for="paypalEmail" class="block text-sm font-medium text-slate-700 mb-1.5">PayPal email</label>
+          <p th:if="${demoPayPal != null}" class="text-xs text-slate-500 mb-2">
+            Last used:
+            <span class="font-mono" th:text="${demoPayPal.maskedReference()}">you@example.com</span>
+          </p>
           <input id="paypalEmail" name="paypalEmail" type="email" required maxlength="254"
-                 th:value="${demoPayPal != null ? demoPayPal.maskedReference() : ''}"
-                 class="input-bank" placeholder="you@example.com" />
+                 class="input-bank" placeholder="you@example.com" autocomplete="email" />
           <p class="text-xs text-slate-400 mt-1.5">Saved to your profile for future demo withdrawals</p>
         </div>
         <div>

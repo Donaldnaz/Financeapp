@@ -1,0 +1,58 @@
+name: Apply Infrastructure (Terraform)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to apply
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      confirm:
+        description: Type apply to confirm
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  terraform-apply:
+    name: Terraform apply (${{ github.event.inputs.environment }})
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'apply'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/${{ github.event.inputs.environment }}
+        run: terraform init -input=false
+
+      - name: Terraform plan
+        working-directory: infra/terraform/environments/${{ github.event.inputs.environment }}
+        env:
+          TF_VAR_jwt_secret: ${{ secrets.TF_VAR_JWT_SECRET_DEV }}
+          TF_VAR_secret_value: ${{ secrets.TF_VAR_SECRET_VALUE_DEV }}
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Terraform apply
+        working-directory: infra/terraform/environments/${{ github.event.inputs.environment }}
+        run: terraform apply -input=false -auto-approve tfplan

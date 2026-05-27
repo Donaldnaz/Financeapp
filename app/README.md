@@ -6,7 +6,7 @@ Full-stack Java Spring Boot banking app: server-rendered Thymeleaf UI + JSON API
 
 - **Web UI** (Thymeleaf + Tailwind via CDN): signup with live strength meter, login, dashboard with a real balance card, send-money page, **demo card deposit**, **PayPal withdraw**, paginated activity log, per-user audit log.
 - **JSON API** under `/api/*`, JWT-protected, suitable for `curl`/Postman/automation.
-- **Auth**: Spring Security + BCrypt (cost 12) + HS256 JWTs in an `HttpOnly; SameSite=Strict` cookie. Users persisted in DynamoDB.
+- **Auth**: Spring Security + BCrypt (cost 12) + HS256 JWTs in an `HttpOnly; SameSite=Strict` cookie. CSRF protection on browser forms. Optional Google OAuth (`oauth` profile). Users persisted in DynamoDB.
 - **Strong password policy** (server-validated):
   - Minimum 12 characters
   - At least one upper, one lower, one digit, one symbol
@@ -22,7 +22,10 @@ Full-stack Java Spring Boot banking app: server-rendered Thymeleaf UI + JSON API
 |---|---|
 | `GET /login`, `POST /login` | Sign in (logs `LOGIN_SUCCESS` / `LOGIN_FAILURE`) |
 | `GET /signup`, `POST /signup` | Self-service account creation with welcome bonus |
-| `POST /logout` | Clears JWT cookie |
+| `POST /logout` | Clears JWT cookie (confirmation modal in UI) |
+| `POST /api/auth/login` | JSON login `{ username, password }` → `{ token, user }` + JWT cookie |
+| `POST /api/auth/logout` | Clears JWT cookie (`204`) |
+| `GET /api/auth/me` | Authenticated principal (alias of `/api/me`) |
 | `GET /health` | JSON `{ "status": "UP" }` |
 | `POST /api/signup` | JSON signup endpoint |
 | `GET /actuator/health/**` | Spring probes |
@@ -52,8 +55,71 @@ JSON API (`/api/*`):
 | `GET /api/accounts/{id}/transactions?cursor=&limit=` | Paginated history |
 | `GET /api/transactions/{transactionId}` | GSI lookup by txn ID |
 | `GET /api/audit/me?limit=&cursor=` | Per-user audit log |
+| `POST /api/assistant/chat` | Banking assistant chat `{ messages: [{ role, content }] }` |
+| `POST /api/assistant/confirm` | Confirm a pending assistant banking action `{ pendingActionId }` |
 
 A user can only act on their own `accountId`; all other accounts return `403`.
+
+## iTrust Assistant (Ollama or OpenAI)
+
+The floating **iTrust Assistant** widget (bottom-right on authenticated pages) uses LLM tool calling against your ledger. By default it uses **free local Ollama** (open-source models). You can switch to paid **OpenAI** via `.env`.
+
+### Default: free local Ollama
+
+```bash
+brew install ollama
+ollama pull llama3.1
+ollama serve
+cp .env.example .env
+./run-local.sh
+```
+
+### Optional: cloud OpenAI
+
+Set in repo root `.env`:
+
+```bash
+ASSISTANT_PROVIDER=openai
+ASSISTANT_API_KEY=sk-...
+ASSISTANT_MODEL=gpt-4o-mini
+ASSISTANT_BASE_URL=https://api.openai.com/v1
+```
+
+Or run: `cd app && ./run-with-cloud-llm.sh`
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ASSISTANT_PROVIDER` | `ollama` | `ollama` (local/free) or `openai` (cloud) |
+| `ASSISTANT_API_KEY` | `ollama` | Required for OpenAI (`sk-...`); ignored for Ollama |
+| `ASSISTANT_MODEL` | `llama3.1` | Model name (`llama3.1` for Ollama, `gpt-4o-mini` for OpenAI) |
+| `ASSISTANT_BASE_URL` | `http://localhost:11434/v1` | Ollama or OpenAI-compatible API base URL |
+| `APP_ASSISTANT_ENABLED` | `true` | Set `false` to disable assistant endpoints |
+
+Legacy `OPENAI_*` env vars still work as aliases for `ASSISTANT_*`.
+
+### Google sign-in (optional)
+
+1. Create an OAuth 2.0 Web client in [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2. Authorized redirect URI: `http://localhost:8080/login/oauth2/code/google` (add your deployed ALB URL for AWS).
+3. Set environment variables and activate the `oauth` profile:
+
+```bash
+export GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+export GOOGLE_CLIENT_SECRET=your-client-secret
+export SPRING_PROFILES_ACTIVE=oauth
+./run-local.sh
+```
+
+The **Continue with Google** button appears on login/signup when `GOOGLE_CLIENT_ID` is set.
+
+Example prompts after signing in as `alice` / `Password!1`:
+
+- “What's my balance?”
+- “Show my recent transactions”
+- “Take me to withdraw” (returns a `/withdraw` link button)
+- “Send $25 to bob” → review the pending action → click **Confirm** (or say “yes, confirm” in chat)
+
+Assistant writes are always **propose → confirm**; the LLM never receives passwords or JWTs. Pending actions expire after about five minutes.
 
 ## Banking model
 
@@ -146,6 +212,11 @@ The JWT signing secret is the same in both regions, so a cookie/token issued by 
 | `APP_JWT_SECRET` | (dev only fallback) | HS256 signing key, **must be ≥ 32 bytes**; passed via Terraform `-var jwt_secret=...` |
 | `APP_SEED_ENABLED` | `true` | Runs `UserSeeder` on startup |
 | `APP_COOKIE_SECURE` | `false` | Set `true` once ALB has HTTPS |
+| `OPENAI_API_KEY` | (empty) | Legacy alias for `ASSISTANT_API_KEY` when using OpenAI |
+| `ASSISTANT_PROVIDER` | `ollama` | `ollama` or `openai` |
+| `ASSISTANT_MODEL` | `llama3.1` | Assistant model |
+| `ASSISTANT_BASE_URL` | `http://localhost:11434/v1` | LLM API base URL |
+| `APP_ASSISTANT_ENABLED` | `true` | Toggle assistant endpoints |
 
 ## Local dev
 
