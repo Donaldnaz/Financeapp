@@ -253,7 +253,7 @@ The default in-memory store still credits the $1,000 welcome bonus, provisions d
 
 Merging to `main` runs GitHub Actions (`.github/workflows/ci.yml`):
 
-1. `mvn verify` + Terraform validate
+1. `mvn verify` (Java tests)
 2. Docker build → push `financeapp-dr-dev-repo:latest` and `:$GITHUB_SHA`
 3. `aws ecs update-service --force-new-deployment` on primary (`us-east-1`) and secondary (`us-west-2`)
 

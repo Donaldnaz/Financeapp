@@ -6,8 +6,8 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 
 - `app/` - Spring Boot app (Thymeleaf UI + `/api/*` REST API)
 - `infra/terraform/` - Modular Terraform for AWS infrastructure
-- `docs/` - Runbook, DR test evidence, and architecture notes ([`docs/PORTFOLIO.md`](docs/PORTFOLIO.md) includes the detailed VPC/subnet diagram)
-- `.github/workflows/` - CI checks for Java and Terraform
+- `docs/` - Runbook, DR test evidence, and architecture ([`docs/architecture/`](docs/architecture/) AWS diagram with VPC/subnets; [`docs/PORTFOLIO.md`](docs/PORTFOLIO.md) for design notes)
+- `.github/workflows/` - App CI/CD ([`ci.yml`](.github/workflows/ci.yml): Java tests, ECR push, ECS rollout) and manual infra apply ([`infra-apply.yml`](.github/workflows/infra-apply.yml))
 
 ## High-Level Capabilities
 
@@ -20,6 +20,13 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 ## Architecture
 
 Active-active deployment in `us-east-1` (primary) and `us-west-2` (secondary). One Docker image per region serves the banking UI and API; DynamoDB Global Table keeps data in sync.
+
+![Dev AWS architecture — VPC, subnets, and services](docs/architecture/financeapp-dr-dev-aws.png)
+
+Editable source: [`docs/architecture/financeapp-dr-dev-aws.drawio`](docs/architecture/financeapp-dr-dev-aws.drawio) · SVG: [`financeapp-dr-dev-aws.svg`](docs/architecture/financeapp-dr-dev-aws.svg)
+
+<details>
+<summary>Simplified diagram (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -53,6 +60,8 @@ flowchart TB
   ci --> ecsW
 ```
 
+</details>
+
 ### Request path
 
 1. DNS resolves via Route53 to the lowest-latency healthy regional ALB (`/health` checks).
@@ -79,7 +88,8 @@ flowchart TB
 
 ### Further reading
 
-- [`docs/PORTFOLIO.md`](docs/PORTFOLIO.md) — VPC/subnet map, banking model, auth design, data schema
+- [`docs/architecture/`](docs/architecture/) — AWS diagram (VPC, subnets, AWS icons)
+- [`docs/PORTFOLIO.md`](docs/PORTFOLIO.md) — banking model, auth design, data schema
 - [`docs/DR-TEST-RESULTS.md`](docs/DR-TEST-RESULTS.md) — disaster recovery test evidence
 - [`docs/RUNBOOK.md`](docs/RUNBOOK.md) — operations and incident response
 
@@ -137,10 +147,26 @@ All deploy scripts (`run-local.sh`, `infra-deploy.sh`, `deploy-dev.sh`) source r
 CONFIRM=destroy ./infra-deploy.sh destroy dev
 ```
 
-**CI/CD (app):** push or merge to `main` — GitHub Actions runs tests, builds the Docker image, pushes to ECR, and force-rolls both ECS services (`us-east-1` + `us-west-2`). Re-deploy from the Actions tab via **Run workflow** (`workflow_dispatch`).
+**CI/CD (app):** push or merge to `main` — [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs:
 
-**CI/CD (infra):** manual **Apply Infrastructure (Terraform)** workflow — type `apply` to confirm. Do not auto-apply Terraform on every push.
+| Job | Trigger | Steps |
+|---|---|---|
+| `quality` | PR, push to `main`, manual | `mvn verify` (Java tests only) |
+| `deploy-dev` | Push to `main` after `quality` passes | Docker build → push ECR → force-new-deployment on both ECS services |
+
+Re-deploy without a code change: **Actions → FinanceApp DR CI/CD → Run workflow**.
+
+**CI/CD (infra):** manual [**Apply Infrastructure (Terraform)**](.github/workflows/infra-apply.yml) workflow — type `apply` to confirm. Terraform is **not** run on every app push; validate locally with `terraform validate` before applying.
 
 Copy [`.env.example`](.env.example) to `.env` for local scripts, and [`infra/terraform/environments/dev/terraform.tfvars.example`](infra/terraform/environments/dev/terraform.tfvars.example) to `terraform.tfvars` for Terraform defaults. Optional `TF_VAR_*` entries in `.env` override tfvars secrets.
 
-Repository secrets required for CI: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (optional for infra apply: `TF_VAR_JWT_SECRET_DEV`, `TF_VAR_SECRET_VALUE_DEV`).
+**GitHub repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Used by |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | `ci.yml` deploy, `infra-apply.yml` |
+| `AWS_SECRET_ACCESS_KEY` | `ci.yml` deploy, `infra-apply.yml` |
+| `TF_VAR_JWT_SECRET_DEV` | `infra-apply.yml` (optional) |
+| `TF_VAR_SECRET_VALUE_DEV` | `infra-apply.yml` (optional) |
+
+CI deploy uses a dedicated IAM user (`github-actions-financeapp-dr`) with least-privilege ECR push and ECS update permissions — see [`infra/iam/github-actions-financeapp-dr-dev-policy.json`](infra/iam/github-actions-financeapp-dr-dev-policy.json).

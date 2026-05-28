@@ -111,9 +111,11 @@ cp .env.example .env
 
 Push to `main` triggers `.github/workflows/ci.yml`:
 
-1. Java tests + Terraform validate
+1. Java tests (`mvn verify`)
 2. Build and push `financeapp-dr-dev-repo:latest` (and `:$GITHUB_SHA`) to ECR in `us-east-1`
 3. `aws ecs update-service --force-new-deployment` on both dev ECS services (primary + secondary after ECR replication)
+
+Terraform validate/lint is **not** part of the app CI pipeline — run locally or use the manual **Apply Infrastructure (Terraform)** workflow for infra changes.
 
 Manual equivalent:
 

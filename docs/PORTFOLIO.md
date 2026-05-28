@@ -177,6 +177,10 @@ All `/api/*` routes require a valid JWT (cookie or `Authorization: Bearer`).
 
 ## End-to-End Architecture (VPC and Subnet Map)
 
+**AWS diagram (dev, official icons):** [`architecture/financeapp-dr-dev-aws.png`](architecture/financeapp-dr-dev-aws.png) · [editable draw.io](architecture/financeapp-dr-dev-aws.drawio) · [legend](architecture/README.md)
+
+Text fallback (Mermaid):
+
 ```mermaid
 flowchart TB
   client["ClientUser"] --> route53["Route53 Public Hosted Zone<br/>ikenna-financeapp-dr.com<br/>Weighted + Health Checks"]
@@ -247,8 +251,6 @@ flowchart TB
   pipeline --> ecr
   ecr --> ecsE
   ecr --> ecsW
-  pipeline -->|"terraform apply"| vpcE
-  pipeline -->|"terraform apply"| vpcW
 ```
 
 ### Component Legend (mapped to actual resources)
@@ -270,7 +272,7 @@ flowchart TB
 4. The API writes and reads transactions in a shared DynamoDB Global Table replicated across both regions.
 5. Runtime configuration and secrets are read from regional Secrets Manager replicas.
 6. CloudWatch alarms track ALB and ECS health and support operational response.
-7. GitHub Actions builds/tests the app, pushes images to ECR, and runs Terraform to deploy infra and updates.
+7. GitHub Actions builds/tests the app, pushes images to ECR, and force-deploys both ECS services on `main`. Infrastructure changes use the manual Terraform apply workflow or `./infra-deploy.sh`.
 8. If one region degrades, Route53 health checks suppress traffic to that region while the other region keeps serving.
 
 ## Why It Is Production-Minded but Simple
