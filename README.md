@@ -1,13 +1,14 @@
 # Production-Ready Java DR App (AWS + Terraform, Active-Active)
 
-Portfolio project demonstrating a production-minded **full-stack banking app** — server-rendered Thymeleaf UI plus JSON API — deployed across two AWS regions with active-active traffic routing and globally replicated data.
+Portfolio project demonstrating a production-minded **full-stack banking app** — server-rendered Thymeleaf UI plus JSON API — deployed across two AWS regions with active-active traffic routing, globally replicated data, and an **iTrust Assistant** powered by **Llama** (via local **Ollama**). Application releases ship through **GitHub Actions** to **ECR** and **ECS** in both regions.
 
 ## Repository Layout
 
-- `app/` - Spring Boot app (Thymeleaf UI + `/api/*` REST API)
+- `app/` - Spring Boot app (Thymeleaf UI + `/api/*` REST API + Llama assistant via Ollama)
 - `infra/terraform/` - Modular Terraform for AWS infrastructure
-- `docs/` - Runbook, DR test evidence, and architecture ([`docs/architecture/`](docs/architecture/) AWS diagram with VPC/subnets; [`docs/PORTFOLIO.md`](docs/PORTFOLIO.md) for design notes)
-- `.github/workflows/` - App CI/CD ([`ci.yml`](.github/workflows/ci.yml): Java tests, ECR push, ECS rollout) and manual infra apply ([`infra-apply.yml`](.github/workflows/infra-apply.yml))
+- `architecture/` - AWS architecture diagram (draw.io, PNG, SVG) with VPC/subnet layout
+- `docs/` - Runbook, DR test evidence, and design notes ([`docs/PORTFOLIO.md`](docs/PORTFOLIO.md))
+- `.github/workflows/` - **GitHub Actions CI/CD** ([`ci.yml`](.github/workflows/ci.yml): test → build → **ECR push** → **ECS rollout** in `us-east-1` + `us-west-2`); manual infra apply ([`infra-apply.yml`](.github/workflows/infra-apply.yml))
 
 ## High-Level Capabilities
 
@@ -15,6 +16,8 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 - Route53 latency/health-based routing
 - DynamoDB Global Tables for cross-region data replication
 - Secrets Manager regional replication pattern
+- **Banking assistant:** Llama (default `llama3.2:3b`) through **Ollama** — local, no OpenAI dependency
+- **Software release:** GitHub Actions → Docker build → ECR → ECS force-new-deployment (both regions)
 - Observability, alarms, and incident runbook
 
 ## Cost, stack, and DR (dev)
@@ -24,7 +27,9 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 | **Estimated daily cost (dev, low traffic)** | ~$4–8/day (~$120–240/month); can reach ~$8–15/day with heavier NAT/data transfer |
 | **Top cost drivers** | NAT Gateway (×2) → ALB (×2) → ECS Fargate → NAT/data egress |
 | **Language / framework** | Java 21, Spring Boot 3.3 (Thymeleaf UI + REST API) |
-| **Infrastructure / deploy** | Terraform, GitHub Actions → ECR → ECS Fargate (both regions) |
+| **AI assistant** | **Ollama** + **Llama** (`ASSISTANT_PROVIDER=ollama`, default `llama3.2:3b`) — not OpenAI |
+| **Software release** | **GitHub Actions** → ECR (`financeapp-dr-dev-repo`) → ECS Fargate (primary + secondary) |
+| **Infrastructure** | Terraform (VPC, ALB, ECS, DynamoDB Global Table, Route53) — separate from app CI/CD |
 | **RTO (target / observed)** | ≤ 5 min target · ~60 s observed ([DR test](docs/DR-TEST-RESULTS.md)) |
 | **RPO (target / observed)** | ≤ 60 s target · < 30 s observed ([DR test](docs/DR-TEST-RESULTS.md)) |
 
@@ -34,9 +39,9 @@ Dev runs **active-active** in `us-east-1` and `us-west-2`: Route53 latency routi
 
 Active-active deployment in `us-east-1` (primary) and `us-west-2` (secondary). One Docker image per region serves the banking UI and API; DynamoDB Global Table keeps data in sync.
 
-![Dev AWS architecture — VPC, subnets, and services](docs/architecture/financeapp-dr-dev-aws.png)
+![Dev AWS architecture — VPC, subnets, and services](architecture/financeapp-dr-dev-aws2.png)
 
-Editable source: [`docs/architecture/financeapp-dr-dev-aws.drawio`](docs/architecture/financeapp-dr-dev-aws.drawio) · SVG: [`financeapp-dr-dev-aws.svg`](docs/architecture/financeapp-dr-dev-aws.svg)
+Editable source: [`architecture/financeapp-dr-dev-aws.drawio`](architecture/financeapp-dr-dev-aws.drawio) · PNG: [`financeapp-dr-dev-aws.png`](architecture/financeapp-dr-dev-aws.png) · SVG: [`architecture/financeapp-dr-dev-aws.svg`](architecture/financeapp-dr-dev-aws.svg)
 
 <details>
 <summary>Simplified diagram (Mermaid)</summary>
@@ -80,7 +85,7 @@ flowchart TB
 1. DNS resolves via Route53 to the lowest-latency healthy regional ALB (`/health` checks).
 2. ALB forwards to an ECS Fargate task running Spring Boot (JWT cookie auth; CSRF on browser forms).
 3. Reads and writes hit the DynamoDB Global Table; changes replicate to the other region within seconds.
-4. GitHub Actions builds the image, pushes to ECR, and force-deploys both ECS services on `main`.
+4. **Software release:** push to `main` — GitHub Actions runs tests, builds the Docker image, pushes to ECR, and force-deploys both ECS services (see [CI/CD](#deploy-to-aws-dev)).
 
 ### Component map (dev)
 
@@ -101,7 +106,7 @@ flowchart TB
 
 ### Further reading
 
-- [`docs/architecture/`](docs/architecture/) — AWS diagram (VPC, subnets, AWS icons)
+- [`architecture/`](architecture/) — AWS diagram (VPC, subnets, AWS icons)
 - [`docs/PORTFOLIO.md`](docs/PORTFOLIO.md) — banking model, auth design, data schema
 - [`docs/DR-TEST-RESULTS.md`](docs/DR-TEST-RESULTS.md) — disaster recovery test evidence
 - [`docs/RUNBOOK.md`](docs/RUNBOOK.md) — operations and incident response
@@ -110,20 +115,28 @@ flowchart TB
 
 1. **Configure environment (once):**
    ```bash
-   cp .env.example .env
-   # edit .env — assistant, AWS deploy, and optional TF_VAR_* secrets
+   cp .env.example .env   # if present
+   # edit .env — Ollama/Llama assistant, AWS deploy keys, optional TF_VAR_* secrets
    ```
-   Spring Boot loads only `ASSISTANT_*`, `OPENAI_*`, and `APP_*` from `.env`. Deploy keys are for shell scripts only.
+   Spring Boot loads `ASSISTANT_*` and `APP_*` from `.env`. Deploy keys are for shell scripts only.
 
-2. **Run locally (UI + API):**
+2. **Start Ollama + Llama (assistant):**
+   ```bash
+   brew install ollama
+   ollama serve
+   ollama pull llama3.2:3b
+   ```
+   Defaults: `ASSISTANT_PROVIDER=ollama`, `ASSISTANT_MODEL=llama3.2:3b`, `ASSISTANT_BASE_URL=http://localhost:11434/v1`. See [`app/README.md`](app/README.md) for assistant env vars.
+
+3. **Run locally (UI + API):**
    ```bash
    ./run-local.sh
    ```
    Open [http://localhost:8080/](http://localhost:8080/) — sign in with `alice` / `Password!1`
 
-3. Build and test API:
+4. Build and test API:
    - `cd app && mvn -B clean verify`
-4. Validate Terraform:
+5. Validate Terraform:
    - `cd infra/terraform/environments/dev`
    - `terraform init`
    - `terraform validate`
@@ -135,7 +148,7 @@ Two layers — keep them separate:
 | Layer | When | Command |
 |---|---|---|
 | **Infrastructure** (VPC, ECS, DDB, Route53) | Module or env changes | `./infra-deploy.sh plan dev` then `./infra-deploy.sh apply dev` |
-| **Application** (Docker image + ECS rollout) | Every release | `./deploy-dev.sh` or CI on `main` |
+| **Application release** (Docker → ECR → ECS) | Every software release | **Push to `main`** (GitHub Actions) or manual `./deploy-dev.sh` |
 
 **First-time / infra change:**
 
@@ -143,12 +156,20 @@ Two layers — keep them separate:
 cp .env.example .env   # if not done yet
 ./infra-deploy.sh plan dev
 ./infra-deploy.sh apply dev
-./deploy-dev.sh
+git push origin main   # triggers CI/CD: build → ECR → ECS rollout
 ```
 
 All deploy scripts (`run-local.sh`, `infra-deploy.sh`, `deploy-dev.sh`) source root `.env` via [`scripts/load-env.sh`](scripts/load-env.sh).
 
-**Routine app release (no Terraform changes):**
+**Routine software release (preferred — GitHub CI/CD):**
+
+```bash
+git push origin main
+```
+
+GitHub Actions [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `mvn verify`, builds the Docker image, pushes to `financeapp-dr-dev-repo` in ECR, and force-deploys ECS in **us-east-1** and **us-west-2**.
+
+**Manual release fallback:**
 
 ```bash
 ./deploy-dev.sh
@@ -160,12 +181,12 @@ All deploy scripts (`run-local.sh`, `infra-deploy.sh`, `deploy-dev.sh`) source r
 CONFIRM=destroy ./infra-deploy.sh destroy dev
 ```
 
-**CI/CD (app):** push or merge to `main` — [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs:
+**CI/CD (software release):** push or merge to `main` — [`.github/workflows/ci.yml`](.github/workflows/ci.yml) is the primary path from code to running containers:
 
 | Job | Trigger | Steps |
 |---|---|---|
-| `quality` | PR, push to `main`, manual | `mvn verify` (Java tests only) |
-| `deploy-dev` | Push to `main` after `quality` passes | Docker build → push ECR → force-new-deployment on both ECS services |
+| `quality` | PR, push to `main`, manual | `mvn verify` (Java tests) |
+| `deploy-dev` | Push to `main` after `quality` passes | Docker build → **push ECR** (`:$GITHUB_SHA` + `:latest`) → **ECS force-new-deployment** (primary + secondary) |
 
 Re-deploy without a code change: **Actions → FinanceApp DR CI/CD → Run workflow**.
 
