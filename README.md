@@ -17,6 +17,19 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 - Secrets Manager regional replication pattern
 - Observability, alarms, and incident runbook
 
+## Cost, stack, and DR (dev)
+
+| Question | Answer |
+|----------|--------|
+| **Estimated daily cost (dev, low traffic)** | ~$4–8/day (~$120–240/month); can reach ~$8–15/day with heavier NAT/data transfer |
+| **Top cost drivers** | NAT Gateway (×2) → ALB (×2) → ECS Fargate → NAT/data egress |
+| **Language / framework** | Java 21, Spring Boot 3.3 (Thymeleaf UI + REST API) |
+| **Infrastructure / deploy** | Terraform, GitHub Actions → ECR → ECS Fargate (both regions) |
+| **RTO (target / observed)** | ≤ 5 min target · ~60 s observed ([DR test](docs/DR-TEST-RESULTS.md)) |
+| **RPO (target / observed)** | ≤ 60 s target · < 30 s observed ([DR test](docs/DR-TEST-RESULTS.md)) |
+
+Dev runs **active-active** in `us-east-1` and `us-west-2`: Route53 latency routing, DynamoDB Global Table replication, and ECS in private subnets (egress via NAT). For account-specific spend, use AWS Cost Explorer with tags `Project=financeapp-dr`, `Environment=dev`.
+
 ## Architecture
 
 Active-active deployment in `us-east-1` (primary) and `us-west-2` (secondary). One Docker image per region serves the banking UI and API; DynamoDB Global Table keeps data in sync.
