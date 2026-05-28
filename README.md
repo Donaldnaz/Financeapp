@@ -16,7 +16,7 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 - Route53 latency/health-based routing
 - DynamoDB Global Tables for cross-region data replication
 - Secrets Manager regional replication pattern
-- **Banking assistant:** Llama (default `llama3.2:3b`) through **Ollama** — local, no OpenAI dependency
+- **Banking assistant:** Llama (default `llama3.2:3b`) 
 - **Software release:** GitHub Actions → Docker build → ECR → ECS force-new-deployment (both regions)
 - Observability, alarms, and incident runbook
 
@@ -27,7 +27,7 @@ Portfolio project demonstrating a production-minded **full-stack banking app** �
 | **Estimated daily cost (dev, low traffic)** | ~$4–8/day (~$120–240/month); can reach ~$8–15/day with heavier NAT/data transfer |
 | **Top cost drivers** | NAT Gateway (×2) → ALB (×2) → ECS Fargate → NAT/data egress |
 | **Language / framework** | Java 21, Spring Boot 3.3 (Thymeleaf UI + REST API) |
-| **AI assistant** | **Ollama** + **Llama** (`ASSISTANT_PROVIDER=ollama`, default `llama3.2:3b`) — not OpenAI |
+| **AI assistant** | **Ollama** + **Llama** (`ASSISTANT_PROVIDER=ollama`, default `llama3.2:3b`) |
 | **Software release** | **GitHub Actions** → ECR (`financeapp-dr-dev-repo`) → ECS Fargate (primary + secondary) |
 | **Infrastructure** | Terraform (VPC, ALB, ECS, DynamoDB Global Table, Route53) — separate from app CI/CD |
 | **RTO (target / observed)** | ≤ 5 min target · ~60 s observed ([DR test](docs/DR-TEST-RESULTS.md)) |
