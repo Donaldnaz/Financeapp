@@ -1,4 +1,4 @@
-# Production-Ready Java DR App (AWS + Terraform, Active-Active)
+# 𝗔𝗻 𝗔𝗜-𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗕𝗮𝗻𝗸𝗶𝗻𝗴 𝗦𝘆𝘀𝘁𝗲𝗺 (AWS + Terraform, Active-Active)
 
 Portfolio project demonstrating a production-minded **full-stack banking app** — server-rendered Thymeleaf UI plus JSON API — deployed across two AWS regions with active-active traffic routing, globally replicated data, and an **iTrust Assistant** powered by **Llama** (via local **Ollama**). Application releases ship through **GitHub Actions** to **ECR** and **ECS** in both regions.
 
